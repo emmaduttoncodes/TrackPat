@@ -3,20 +3,22 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  base: '/TrackPat/',
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icon-192.png', 'icon-512.png'],
       manifest: {
-        name: 'Recovery Log',
-        short_name: 'Recovery',
+        name: 'TrackPat',
+        short_name: 'TrackPat',
         description: 'A calm recovery tracking app',
         theme_color: '#8fae8b',
         background_color: '#f7f6f2',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
+        start_url: '/TrackPat/',
+        scope: '/TrackPat/',
         icons: [
           {
             src: 'icon-192.png',

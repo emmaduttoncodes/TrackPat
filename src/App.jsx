@@ -969,11 +969,6 @@ function FoodSafetyView({ transplantDate, onClose }) {
   const [waiterMode, setWaiterMode] = useState(false);
   const showTemporary = isWithinSixMonths(transplantDate);
 
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
-  }, []);
-
   if (waiterMode) {
     return (
       <div className="fixed inset-0 z-50" style={{ background: ds.card, overflowY: 'auto' }}>

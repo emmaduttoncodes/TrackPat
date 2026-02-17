@@ -76,6 +76,7 @@ const FOOD_RESTRICTIONS = {
     { name: 'Grapefruit & grapefruit juice', reason: 'Drug interactions with immunosuppressants', icon: '🍊' },
     { name: 'Seville/bitter oranges', reason: 'Drug interactions with immunosuppressants', icon: '🍊' },
     { name: 'Pomelo', reason: 'Drug interactions with immunosuppressants', icon: '🍈' },
+    { name: 'Pomegranate & pomegranate juice', reason: 'Drug interactions with immunosuppressants', icon: '🍎' },
     { name: 'Star fruit', reason: 'Toxicity risk for transplant patients', icon: '⭐' },
     { name: "St John's Wort", reason: 'Alters immunosuppressant levels', icon: '🌿' },
     { name: 'Herbal supplements without doctor approval', reason: 'May alter immunosuppressant levels', icon: '💊' },

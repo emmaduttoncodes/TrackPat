@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   db, emptyDay, loadDay, saveDay, loadAllDays, loadSchedules, saveSchedule,
   deleteSchedule, loadMedEvents, saveMedEvent, deleteMedEvent, exportAllData,
@@ -1406,6 +1406,24 @@ export default function App() {
   // Scroll to top when switching pages
   useEffect(() => { window.scrollTo(0, 0); }, [page]);
 
+  // Swipe to change date
+  const touchRef = useRef(null);
+  const handleTouchStart = useCallback((e) => {
+    touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, []);
+  const handleTouchEnd = useCallback((e) => {
+    if (!touchRef.current) return;
+    const dx = e.changedTouches[0].clientX - touchRef.current.x;
+    const dy = e.changedTouches[0].clientY - touchRef.current.y;
+    touchRef.current = null;
+    if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx)) return;
+    if (dx > 0) {
+      setCurrentDate((prev) => addDays(prev, -1));
+    } else {
+      setCurrentDate((prev) => prev < todayStr() ? addDays(prev, 1) : prev);
+    }
+  }, []);
+
   // Load data when date changes
   useEffect(() => {
     let cancelled = false;
@@ -1473,7 +1491,7 @@ export default function App() {
   return (
     <div className="min-h-screen" style={{ background: ds.bg, fontFamily: "'DM Sans', sans-serif" }}>
       {page === 'overview' && (
-        <>
+        <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
           {/* Header */}
           <div className="px-5 pt-6 pb-5" style={{ background: 'linear-gradient(135deg, #8fae8b 0%, #a3c4a0 40%, #90c5b0 100%)' }}>
             <div className="flex items-center justify-between mb-1">
@@ -1551,7 +1569,7 @@ export default function App() {
               {sheetConfigs[activeSheet].content}
             </BottomSheet>
           )}
-        </>
+        </div>
       )}
 
       {page === 'trends' && <TrendsPage />}
@@ -1560,7 +1578,7 @@ export default function App() {
       {/* Spacer for bottom nav */}
       <div style={{ height: 72 }} />
 
-      <BottomNav page={page} setPage={setPage} />
+      <BottomNav page={page} setPage={(p) => { if (p === 'overview') setCurrentDate(todayStr()); setPage(p); }} />
     </div>
   );
 }

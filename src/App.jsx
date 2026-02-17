@@ -445,6 +445,9 @@ function BottomNav({ page, setPage }) {
 
 // ─── Placeholder Pages ────────────────────────────────────────────────
 function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
+  const svgRef = useRef(null);
+  const [activeIdx, setActiveIdx] = useState(null);
+
   if (!data.length) {
     return (
       <div style={{ ...tile, marginBottom: 12 }}>
@@ -480,10 +483,46 @@ function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
     ? data.map((_, i) => i)
     : [0, Math.floor((data.length - 1) / 2), data.length - 1];
 
+  // Find nearest data point from a client X position
+  const getNearestIdx = (clientX) => {
+    const svg = svgRef.current;
+    if (!svg || !points.length) return null;
+    const rect = svg.getBoundingClientRect();
+    const svgX = ((clientX - rect.left) / rect.width) * W;
+    let closest = 0;
+    let closestDist = Infinity;
+    for (let i = 0; i < points.length; i++) {
+      const dist = Math.abs(points[i].px - svgX);
+      if (dist < closestDist) { closestDist = dist; closest = i; }
+    }
+    return closest;
+  };
+
+  const handlePointerDown = (e) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setActiveIdx(getNearestIdx(e.clientX));
+  };
+  const handlePointerMove = (e) => {
+    if (activeIdx == null) return;
+    setActiveIdx(getNearestIdx(e.clientX));
+  };
+  const handlePointerUp = () => setActiveIdx(null);
+  const handlePointerCancel = () => setActiveIdx(null);
+
+  const ap = activeIdx != null ? points[activeIdx] : null;
+
   return (
     <div style={{ ...tile, marginBottom: 12 }}>
       <div style={{ ...tileLabel, color, marginBottom: 8 }}>{title}</div>
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }}>
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${W} ${H}`}
+        style={{ width: '100%', height: 'auto', touchAction: 'none' }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+      >
         {/* Y grid lines and labels */}
         {yLabels.map((v, i) => {
           const y = padT + chartH - ((v - lo) / range) * chartH;
@@ -502,7 +541,7 @@ function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
         <path d={linePath} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         {/* Dots */}
         {points.map((p, i) => (
-          <circle key={i} cx={p.px} cy={p.py} r="3" fill="#fff" stroke={color} strokeWidth="2" />
+          <circle key={i} cx={p.px} cy={p.py} r={activeIdx === i ? 5 : 3} fill={activeIdx === i ? color : '#fff'} stroke={color} strokeWidth="2" />
         ))}
         {/* X labels */}
         {labelIndices.map((i) => {
@@ -516,6 +555,16 @@ function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
             </text>
           );
         })}
+        {/* Active point indicator */}
+        {ap && (
+          <>
+            <line x1={ap.px} y1={padT} x2={ap.px} y2={padT + chartH} stroke={color} strokeWidth="1" opacity="0.3" strokeDasharray="3,3" />
+            <rect x={ap.px - 28} y={Math.max(0, ap.py - 24)} width="56" height="18" rx="4" fill={color} />
+            <text x={ap.px} y={Math.max(0, ap.py - 24) + 12.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="600" fontFamily="DM Sans, sans-serif">
+              {formatY ? formatY(ap.y) : ap.y}{unit ? ` ${unit}` : ''}
+            </text>
+          </>
+        )}
       </svg>
       {/* Latest value */}
       <div style={{ fontSize: 12, color: ds.textLight, marginTop: 4, textAlign: 'right' }}>

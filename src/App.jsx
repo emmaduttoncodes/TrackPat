@@ -182,13 +182,15 @@ function VitalsTile({ data, onClick }) {
 function MoodTile({ data, onClick }) {
   const found = moods.find((m) => m.value === data.value);
   return (
-    <div style={{ ...tile, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 120 }} onClick={onClick} className="active:scale-[0.98]">
-      <div style={{ ...tileLabel, color: '#b8a0c9', marginBottom: 8 }}>Mood</div>
-      {found ? (
-        <div style={{ fontSize: 42, lineHeight: 1 }}>{found.emoji}</div>
-      ) : (
-        <div style={{ fontSize: 32, opacity: 0.2, lineHeight: 1 }}>💭</div>
-      )}
+    <div style={{ ...tile, display: 'flex', flexDirection: 'column', minHeight: 120 }} onClick={onClick} className="active:scale-[0.98]">
+      <div style={{ ...tileLabel, color: '#b8a0c9' }}>Mood</div>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {found ? (
+          <div style={{ fontSize: 42, lineHeight: 1 }}>{found.emoji}</div>
+        ) : (
+          <div style={{ fontSize: 32, opacity: 0.2, lineHeight: 1 }}>💭</div>
+        )}
+      </div>
       {data.note && <div style={{ fontSize: 11, color: '#aaa', marginTop: 6, textAlign: 'center', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{data.note}</div>}
     </div>
   );
@@ -352,15 +354,15 @@ function PainSheet({ data, onChange }) {
 function ActivitySheet({ data, onChange }) {
   const up = (k, v) => onChange({ ...data, [k]: v });
   const addWalk = () => up('walkMinutes', [...data.walkMinutes, { id: uid(), time: nowTime(), minutes: '' }]);
-  const updateWalk = (i, v) => { const n = [...data.walkMinutes]; n[i] = { ...n[i], minutes: v }; up('walkMinutes', n); };
+  const updateWalk = (i, k, v) => { const n = [...data.walkMinutes]; n[i] = { ...n[i], [k]: v }; up('walkMinutes', n); };
   const removeWalk = (i) => up('walkMinutes', data.walkMinutes.filter((_, j) => j !== i));
   return (
     <>
       <label style={labelStyle}>Walks</label>
       {data.walkMinutes.map((w, i) => (
         <div key={w.id} className="flex gap-2 items-center mb-2">
-          <input type="number" inputMode="decimal" value={w.minutes} onChange={(e) => updateWalk(i, e.target.value)} placeholder="mins" style={{ ...inputStyle, width: 80 }} />
-          <span style={{ fontSize: 12, color: '#999' }}>{w.time}</span>
+          <input type="number" inputMode="decimal" value={w.minutes} onChange={(e) => updateWalk(i, 'minutes', e.target.value)} placeholder="mins" style={{ ...inputStyle, width: 80 }} />
+          <input type="time" value={w.time} onChange={(e) => updateWalk(i, 'time', e.target.value)} style={{ ...inputStyle, width: 110 }} />
           <button onClick={() => removeWalk(i)} style={{ fontSize: 12, color: '#c97070' }}>×</button>
         </div>
       ))}
@@ -763,7 +765,7 @@ export default function App() {
                 sub={dayData.appetite.note || null}
                 empty={!dayData.appetite.thumb && !(dayData.appetite.note && dayData.appetite.note.trim())}
                 onClick={() => setActiveSheet('appetite')} />
-              <SmallTile label="Bowel" icon="🚽" color="#8fb8b0"
+              <SmallTile label="Bowels" icon="🚽" color="#8fb8b0"
                 value={dayData.bowel.hadBm ? '✓' : null}
                 sub={dayData.bowel.hadBm ? (dayData.bowel.note ? dayData.bowel.note : 'Yes') : (dayData.bowel.note ? dayData.bowel.note : null)}
                 empty={!dayData.bowel.hadBm && !(dayData.bowel.note && dayData.bowel.note.trim())}

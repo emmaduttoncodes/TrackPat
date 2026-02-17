@@ -62,6 +62,33 @@ const symptomLabels = {
   swelling: 'Swelling', nausea: 'Nausea', vomiting: 'Vomiting',
 };
 
+// ─── Design Tokens ────────────────────────────────────────────────────
+const ds = {
+  // Colors
+  green: '#7a9b7e',       // primary actions, active states, nav
+  greenLight: '#e8f0e8',  // green tinted backgrounds
+  greenCheck: '#7fb685',  // checkmarks, success indicators
+  greenSage: '#8fae8b',   // tile labels (vitals, symptoms ok)
+  // Text
+  text: '#3d3d3d',
+  textMuted: '#7a7a7a',
+  textLight: '#999',
+  textPlaceholder: '#ccc',
+  // Surfaces
+  bg: '#f7f6f2',
+  card: '#fff',
+  cardAlt: '#f5f4f0',
+  border: '#e0ddd6',
+  divider: '#f0eeea',
+  // Radius
+  radiusLg: 20,    // tiles, cards, gradient boxes
+  radiusMd: 16,    // buttons, action containers
+  radiusSm: 12,    // inputs, small buttons
+  // Shadows
+  cardShadow: '0 1px 4px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.02)',
+  cardBorder: '1px solid rgba(0,0,0,0.03)',
+};
+
 // ─── Bottom Sheet ──────────────────────────────────────────────────────
 function BottomSheet({ open, onClose, title, children }) {
   useEffect(() => {
@@ -76,13 +103,13 @@ function BottomSheet({ open, onClose, title, children }) {
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.25)' }} />
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-lg rounded-t-3xl px-5 pb-8 pt-3"
+        className="relative w-full max-w-lg rounded-t-2xl px-5 pb-8 pt-3"
         style={{ background: '#faf9f6', maxHeight: '85vh', overflowY: 'auto', animation: 'slideUp .25s ease-out' }}
       >
         <div className="mx-auto mb-4 h-1 w-10 rounded-full" style={{ background: '#d4d0c8' }} />
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold" style={{ color: '#3d3d3d', fontFamily: "'Source Serif 4', Georgia, serif" }}>{title}</h3>
-          <button onClick={onClose} className="text-sm px-3 py-1 rounded-full" style={{ background: '#e8e6e1', color: '#6b6b6b' }}>Close</button>
+          <h3 className="text-lg font-semibold" style={{ color: ds.text, fontFamily: "'Source Serif 4', Georgia, serif" }}>{title}</h3>
+          <button onClick={onClose} className="text-sm px-3 py-1 rounded-full" style={{ background: '#e8e6e1', color: ds.textMuted }}>Close</button>
         </div>
         {children}
       </div>
@@ -92,10 +119,10 @@ function BottomSheet({ open, onClose, title, children }) {
 
 // ─── Input Components ──────────────────────────────────────────────────
 const inputStyle = {
-  width: '100%', padding: '10px 14px', borderRadius: 12, border: '1.5px solid #e0ddd6',
-  background: '#fff', fontSize: 15, color: '#3d3d3d', outline: 'none', fontFamily: "'DM Sans', sans-serif",
+  width: '100%', padding: '10px 14px', borderRadius: ds.radiusSm, border: '1px solid ' + ds.border,
+  background: ds.card, fontSize: 15, color: ds.text, outline: 'none', fontFamily: "'DM Sans', sans-serif",
 };
-const labelStyle = { fontSize: 13, fontWeight: 500, color: '#7a7a7a', marginBottom: 4, display: 'block', fontFamily: "'DM Sans', sans-serif" };
+const labelStyle = { fontSize: 13, fontWeight: 500, color: ds.textMuted, marginBottom: 4, display: 'block', fontFamily: "'DM Sans', sans-serif" };
 
 function Field({ label, children }) {
   return <div className="mb-3"><label style={labelStyle}>{label}</label>{children}</div>;
@@ -119,7 +146,7 @@ function Input({ label, value, onChange, type = 'text', placeholder = '', min, m
   };
   return (
     <Field label={label}>
-      <input type={type} inputMode={type === 'number' ? 'decimal' : undefined} value={value} onChange={(e) => handleChange(e.target.value)} onBlur={handleBlur} placeholder={placeholder} style={{ ...inputStyle, borderColor: error ? '#d4a574' : '#e0ddd6' }} />
+      <input type={type} inputMode={type === 'number' ? 'decimal' : undefined} value={value} onChange={(e) => handleChange(e.target.value)} onBlur={handleBlur} placeholder={placeholder} style={{ ...inputStyle, borderColor: error ? '#d4a574' : ds.border }} />
       {error && <div style={{ fontSize: 12, color: '#c97070', marginTop: 4 }}>{error}</div>}
     </Field>
   );
@@ -139,7 +166,7 @@ function ThumbPicker({ value, onChange }) {
       onClick={() => onChange(value === v ? null : v)}
       className="text-2xl rounded-xl px-4 py-2 transition-all"
       style={{
-        background: value === v ? '#e8f5e9' : '#f0eeea',
+        background: value === v ? '#e8f5e9' : ds.divider,
         opacity: value === v ? 1 : 0.45,
         border: value === v ? '2px solid #a5c9a8' : '2px solid transparent',
       }}
@@ -150,9 +177,9 @@ function ThumbPicker({ value, onChange }) {
 
 // ─── Dashboard Tiles ───────────────────────────────────────────────────
 const tile = {
-  background: '#fff', borderRadius: 20, padding: '14px 16px',
-  boxShadow: '0 1px 4px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.02)',
-  cursor: 'pointer', transition: 'transform .1s', border: '1px solid rgba(0,0,0,0.03)',
+  background: ds.card, borderRadius: ds.radiusLg, padding: '16px 18px',
+  boxShadow: ds.cardShadow,
+  cursor: 'pointer', transition: 'transform .1s', border: ds.cardBorder,
   position: 'relative', overflow: 'hidden',
 };
 const tileLabel = { fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, fontFamily: "'DM Sans', sans-serif" };
@@ -166,13 +193,13 @@ function VitalsTile({ data, onClick }) {
     { label: 'Weight', value: data.weightKg || '—', unit: data.weightKg ? 'kg' : '', color: '#7ab8a8' },
   ];
   return (
-    <div style={{ ...tile, padding: '16px 18px' }} onClick={onClick} className="active:scale-[0.98]">
-      <div style={{ ...tileLabel, color: '#8fae8b', marginBottom: 12 }}>Vitals</div>
+    <div style={tile} onClick={onClick} className="active:scale-[0.98]">
+      <div style={{ ...tileLabel, color: ds.greenSage, marginBottom: 12 }}>Vitals</div>
       <div className="grid grid-cols-4 gap-2">
         {stats.map((s) => (
           <div key={s.label} className="text-center">
-            <div style={{ ...tileValue, fontSize: s.value.length > 5 ? 16 : 22, color: s.value === '—' ? '#d4d0c8' : '#3d3d3d', lineHeight: 1.1 }}>{s.value}</div>
-            <div style={{ fontSize: 10, color: s.value === '—' ? '#ccc' : s.color, marginTop: 2, fontWeight: 500 }}>{s.unit && s.value !== '—' ? s.unit : s.label}</div>
+            <div style={{ ...tileValue, fontSize: s.value.length > 5 ? 16 : 22, color: s.value === '—' ? '#d4d0c8' : ds.text, lineHeight: 1.1 }}>{s.value}</div>
+            <div style={{ fontSize: 10, color: s.value === '—' ? ds.textPlaceholder : s.color, marginTop: 2, fontWeight: 500 }}>{s.unit && s.value !== '—' ? s.unit : s.label}</div>
           </div>
         ))}
       </div>
@@ -192,7 +219,7 @@ function MoodTile({ data, onClick }) {
           <div style={{ fontSize: 32, opacity: 0.2, lineHeight: 1 }}>💭</div>
         )}
       </div>
-      {data.note && <div style={{ fontSize: 11, color: '#aaa', marginTop: 6, textAlign: 'center', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{data.note}</div>}
+      {data.note && <div style={{ fontSize: 11, color: ds.textLight, marginTop: 6, textAlign: 'center', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{data.note}</div>}
     </div>
   );
 }
@@ -204,13 +231,13 @@ function SleepTile({ data, onClick }) {
     <div style={{ ...tile, minHeight: 120, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }} onClick={onClick} className="active:scale-[0.98]">
       <div style={{ ...tileLabel, color: '#8b9cc7' }}>Sleep</div>
       <div className="flex items-end gap-2 mt-2">
-        <div style={{ ...tileValue, fontSize: hrs ? 36 : 28, color: hrs ? '#3d3d3d' : '#d4d0c8', lineHeight: 1 }}>{hrs ? hrs : '—'}</div>
+        <div style={{ ...tileValue, fontSize: hrs ? 36 : 28, color: hrs ? ds.text : '#d4d0c8', lineHeight: 1 }}>{hrs ? hrs : '—'}</div>
         {hrs > 0 && <div style={{ fontSize: 14, color: '#8b9cc7', paddingBottom: 2 }}>hrs</div>}
       </div>
       <div className="mt-2 rounded-full overflow-hidden" style={{ height: 6, background: '#eeecea' }}>
         <div className="rounded-full" style={{ height: '100%', width: `${pct * 100}%`, background: 'linear-gradient(90deg, #8b9cc7, #a8b8d8)', transition: 'width .3s' }} />
       </div>
-      {data.qualityThumb && <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>{data.qualityThumb === 'up' ? '👍 Good' : '👎 Poor'}</div>}
+      {data.qualityThumb && <div style={{ fontSize: 11, color: ds.textLight, marginTop: 4 }}>{data.qualityThumb === 'up' ? '👍 Good' : '👎 Poor'}</div>}
     </div>
   );
 }
@@ -226,13 +253,13 @@ function PainTile({ data, onClick }) {
           {last ? (
             <>
               <div className="flex items-end gap-1 mt-1">
-                <span style={{ ...tileValue, fontSize: 28, color: '#3d3d3d', lineHeight: 1 }}>{last.level}</span>
-                <span style={{ fontSize: 12, color: '#bbb', paddingBottom: 2 }}>/10</span>
+                <span style={{ ...tileValue, fontSize: 28, color: ds.text, lineHeight: 1 }}>{last.level}</span>
+                <span style={{ fontSize: 12, color: ds.textLight, paddingBottom: 2 }}>/10</span>
               </div>
-              {data.length > 1 && <div style={{ fontSize: 11, color: '#bbb', marginTop: 2 }}>{data.length} entries today</div>}
+              {data.length > 1 && <div style={{ fontSize: 11, color: ds.textLight, marginTop: 2, whiteSpace: 'nowrap' }}>{data.length} entries today</div>}
             </>
           ) : (
-            <div style={{ fontSize: 13, color: '#ccc', marginTop: 6 }}>None</div>
+            <div style={{ fontSize: 13, color: ds.textPlaceholder, marginTop: 6 }}>None</div>
           )}
         </div>
         {last && (
@@ -255,15 +282,15 @@ function ActivityTile({ data, onClick }) {
       {total > 0 ? (
         <>
           <div className="flex items-end gap-1 mt-1">
-            <span style={{ ...tileValue, fontSize: 28, color: '#3d3d3d', lineHeight: 1 }}>{total}</span>
-            <span style={{ fontSize: 12, color: '#bbb', paddingBottom: 2 }}>min</span>
+            <span style={{ ...tileValue, fontSize: 28, color: ds.text, lineHeight: 1 }}>{total}</span>
+            <span style={{ fontSize: 12, color: ds.textLight, paddingBottom: 2 }}>min</span>
           </div>
-          {data.energyThumb && <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>{data.energyThumb === 'up' ? '👍 Good energy' : '👎 Low energy'}</div>}
+          {data.energyThumb && <div style={{ fontSize: 11, color: ds.textLight, marginTop: 2 }}>{data.energyThumb === 'up' ? '👍 Good energy' : '👎 Low energy'}</div>}
         </>
       ) : (
         <div className="flex items-center gap-2 mt-3">
           <span style={{ fontSize: 20, opacity: 0.2 }}>🚶</span>
-          <span style={{ fontSize: 13, color: '#ccc' }}>No walks</span>
+          <span style={{ fontSize: 13, color: ds.textPlaceholder }}>No walks</span>
         </div>
       )}
     </div>
@@ -279,8 +306,8 @@ function SmallTile({ label, icon, value, sub, color, onClick, empty }) {
       ) : (
         <div className="flex items-center gap-2 mt-1" style={{ minWidth: 0 }}>
           {value && <span style={{ fontSize: 20, flexShrink: 0 }}>{value}</span>}
-          {!value && sub && <span style={{ fontSize: 12, color: '#999', flexShrink: 0 }}>📝</span>}
-          {sub && <span style={{ fontSize: 12, color: '#999', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</span>}
+          {!value && sub && <span style={{ fontSize: 12, color: ds.textLight, flexShrink: 0 }}>📝</span>}
+          {sub && <span style={{ fontSize: 12, color: ds.textLight, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</span>}
         </div>
       )}
     </div>
@@ -296,15 +323,15 @@ function SymptomsTile({ data, onClick }) {
   const summaryText = details ? `${details}${overflow}` : hasNote ? 'Note recorded' : '';
   return (
     <div
-      style={{ ...tile, background: hasAny ? '#fdf6ee' : '#fff', borderColor: hasAny ? 'rgba(212,165,116,0.2)' : 'rgba(0,0,0,0.03)', padding: '12px 16px' }}
+      style={{ ...tile, background: hasAny ? '#fdf6ee' : ds.card, borderColor: hasAny ? 'rgba(212,165,116,0.2)' : 'rgba(0,0,0,0.03)', padding: '12px 16px' }}
       onClick={onClick}
       className="active:scale-[0.98]"
     >
       <div className="flex items-center gap-2">
         <span style={{ fontSize: 14 }}>{hasAny ? '⚠️' : '✅'}</span>
-        <span style={{ ...tileLabel, color: hasAny ? '#c9914a' : '#8fae8b', margin: 0 }}>{hasAny ? 'Symptoms' : 'No symptoms'}</span>
+        <span style={{ ...tileLabel, color: hasAny ? '#c9914a' : ds.greenSage, margin: 0 }}>{hasAny ? 'Symptoms' : 'No symptoms'}</span>
         {hasAny && <span style={{ fontSize: 12, color: '#c9914a', marginLeft: 'auto', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60%' }}>{summaryText}</span>}
-        {!hasAny && <span style={{ color: '#ccc', fontSize: 16, marginLeft: 'auto' }}>›</span>}
+        {!hasAny && <span style={{ color: ds.textPlaceholder, fontSize: 16, marginLeft: 'auto' }}>›</span>}
       </div>
     </div>
   );
@@ -343,7 +370,7 @@ function BottomNav({ page, setPage }) {
     <div
       style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40,
-        background: '#e8f0e8', borderTop: '1px solid rgba(0,0,0,0.04)',
+        background: ds.greenLight, borderTop: '1px solid rgba(0,0,0,0.04)',
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
@@ -357,14 +384,14 @@ function BottomNav({ page, setPage }) {
               style={{
                 flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 gap: 2, background: 'none', border: 'none', cursor: 'pointer', position: 'relative',
-                color: active ? '#7a9b7e' : '#b5b5b5', fontFamily: "'DM Sans', sans-serif",
+                color: active ? ds.green : '#b5b5b5', fontFamily: "'DM Sans', sans-serif",
                 fontSize: 11, fontWeight: active ? 600 : 500,
               }}
             >
               {active && (
                 <div style={{
                   position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
-                  width: 20, height: 3, borderRadius: 2, background: '#7a9b7e',
+                  width: 20, height: 3, borderRadius: 2, background: ds.green,
                 }} />
               )}
               <div style={{ marginTop: 2 }}>{item.icon}</div>
@@ -381,9 +408,9 @@ function BottomNav({ page, setPage }) {
 function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
   if (!data.length) {
     return (
-      <div style={{ ...tile, padding: '16px 18px', marginBottom: 12 }}>
+      <div style={{ ...tile, marginBottom: 12 }}>
         <div style={{ ...tileLabel, color, marginBottom: 8 }}>{title}</div>
-        <div style={{ fontSize: 13, color: '#ccc', textAlign: 'center', padding: '20px 0' }}>No data yet</div>
+        <div style={{ fontSize: 13, color: ds.textPlaceholder, textAlign: 'center', padding: '20px 0' }}>No data yet</div>
       </div>
     );
   }
@@ -415,7 +442,7 @@ function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
     : [0, Math.floor((data.length - 1) / 2), data.length - 1];
 
   return (
-    <div style={{ ...tile, padding: '16px 18px', marginBottom: 12 }}>
+    <div style={{ ...tile, marginBottom: 12 }}>
       <div style={{ ...tileLabel, color, marginBottom: 8 }}>{title}</div>
       <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }}>
         {/* Y grid lines and labels */}
@@ -424,7 +451,7 @@ function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
           return (
             <g key={i}>
               <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#eeecea" strokeWidth="1" />
-              <text x={padL - 4} y={y + 3} textAnchor="end" fill="#bbb" fontSize="8" fontFamily="DM Sans, sans-serif">
+              <text x={padL - 4} y={y + 3} textAnchor="end" fill={ds.textLight} fontSize="8" fontFamily="DM Sans, sans-serif">
                 {formatY ? formatY(v) : Math.round(v)}
               </text>
             </g>
@@ -445,15 +472,15 @@ function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
           const parts = p.label.split('-');
           const lbl = `${parseInt(parts[2])}/${parseInt(parts[1])}`;
           return (
-            <text key={i} x={p.px} y={H - 4} textAnchor="middle" fill="#bbb" fontSize="8" fontFamily="DM Sans, sans-serif">
+            <text key={i} x={p.px} y={H - 4} textAnchor="middle" fill={ds.textLight} fontSize="8" fontFamily="DM Sans, sans-serif">
               {lbl}
             </text>
           );
         })}
       </svg>
       {/* Latest value */}
-      <div style={{ fontSize: 12, color: '#999', marginTop: 4, textAlign: 'right' }}>
-        Latest: <span style={{ color: '#3d3d3d', fontWeight: 600 }}>{formatY ? formatY(data[data.length - 1].y) : data[data.length - 1].y}{unit ? ` ${unit}` : ''}</span>
+      <div style={{ fontSize: 12, color: ds.textLight, marginTop: 4, textAlign: 'right' }}>
+        Latest: <span style={{ color: ds.text, fontWeight: 600 }}>{formatY ? formatY(data[data.length - 1].y) : data[data.length - 1].y}{unit ? ` ${unit}` : ''}</span>
       </div>
     </div>
   );
@@ -470,10 +497,10 @@ function TrendsPage() {
 
   if (!allDays) {
     return (
-      <div style={{ paddingTop: 'env(safe-area-inset-top)', background: '#f7f6f2', minHeight: '100vh' }}>
+      <div style={{ paddingTop: 'env(safe-area-inset-top)', background: ds.bg, minHeight: '100vh' }}>
         <div style={{ padding: '24px 20px' }}>
-          <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: '#3d3d3d' }}>Trends</h2>
-          <div style={{ color: '#8fae8b', textAlign: 'center', padding: 40 }}>Loading...</div>
+          <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: ds.text }}>Trends</h2>
+          <div style={{ color: ds.greenSage, textAlign: 'center', padding: 40 }}>Loading...</div>
         </div>
       </div>
     );
@@ -507,16 +534,16 @@ function TrendsPage() {
   const hasAny = painData.length || activityData.length || weightData.length || moodData.length;
 
   return (
-    <div style={{ paddingTop: 'env(safe-area-inset-top)', background: '#f7f6f2', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'env(safe-area-inset-top)', background: ds.bg, minHeight: '100vh' }}>
       <div style={{ padding: '24px 20px' }}>
-        <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: '#3d3d3d', marginBottom: 20 }}>Trends</h2>
+        <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: ds.text, marginBottom: 20 }}>Trends</h2>
 
         {!hasAny && (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#b5b5b5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 12px' }}>
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
             </svg>
-            <p style={{ fontSize: 14, color: '#999', maxWidth: 260, margin: '0 auto', lineHeight: 1.5 }}>Start logging data on the Overview tab and your trends will appear here.</p>
+            <p style={{ fontSize: 14, color: ds.textLight, maxWidth: 260, margin: '0 auto', lineHeight: 1.5 }}>Start logging data on the Overview tab and your trends will appear here.</p>
           </div>
         )}
 
@@ -532,11 +559,20 @@ function TrendsPage() {
 
 function ProfilePage({ onExport }) {
   const [transplantDate, setTransplantDate] = useState('');
+  const [name, setName] = useState('Friend');
+  const [editingName, setEditingName] = useState(false);
+  const [allDays, setAllDays] = useState(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    loadSetting('transplantDate').then((v) => {
-      if (v) setTransplantDate(v);
+    Promise.all([
+      loadSetting('transplantDate'),
+      loadSetting('userName'),
+      loadAllDays(),
+    ]).then(([txDate, storedName, days]) => {
+      if (txDate) setTransplantDate(txDate);
+      if (storedName) setName(storedName);
+      setAllDays(days);
       setLoaded(true);
     });
   }, []);
@@ -544,6 +580,13 @@ function ProfilePage({ onExport }) {
   const handleDateChange = (value) => {
     setTransplantDate(value);
     saveSetting('transplantDate', value);
+  };
+
+  const handleNameSave = () => {
+    const trimmed = name.trim() || 'Friend';
+    setName(trimmed);
+    saveSetting('userName', trimmed);
+    setEditingName(false);
   };
 
   const daysSince = () => {
@@ -554,25 +597,103 @@ function ProfilePage({ onExport }) {
     return Math.floor((now - tx) / 86400000);
   };
 
+  // Check if a day has any meaningful data
+  const isDayLogged = (d) => {
+    if (!d) return false;
+    if (d.vitals && (d.vitals.temperatureC || d.vitals.systolic || d.vitals.diastolic || d.vitals.heartRate || d.vitals.weightKg)) return true;
+    if (d.pain && d.pain.some((e) => e.level)) return true;
+    if (d.activity && (d.activity.walkMinutes.some((w) => w.minutes) || d.activity.energyThumb || d.activity.note)) return true;
+    if (d.sleep && (d.sleep.hours || d.sleep.qualityThumb || d.sleep.note)) return true;
+    if (d.appetite && (d.appetite.thumb || d.appetite.note)) return true;
+    if (d.mood && (d.mood.value != null || d.mood.note)) return true;
+    if (d.bowel && (d.bowel.hadBm || d.bowel.note)) return true;
+    if (d.symptoms) {
+      const { note, ...flags } = d.symptoms;
+      if (note || Object.values(flags).some(Boolean)) return true;
+    }
+    return false;
+  };
+
+  // Compute quick stats
+  const computeStats = () => {
+    if (!allDays) return { daysLogged: 0, streak: 0, last7: 0 };
+    const loggedDates = new Set(Object.entries(allDays).filter(([, d]) => isDayLogged(d)).map(([date]) => date));
+    const daysLogged = loggedDates.size;
+
+    // Current streak (consecutive days ending today or yesterday)
+    const today = todayStr();
+    let streak = 0;
+    let checkDate = today;
+    while (loggedDates.has(checkDate)) {
+      streak++;
+      checkDate = addDays(checkDate, -1);
+    }
+    // If no entry today, check streak ending yesterday
+    if (streak === 0) {
+      checkDate = addDays(today, -1);
+      while (loggedDates.has(checkDate)) {
+        streak++;
+        checkDate = addDays(checkDate, -1);
+      }
+    }
+
+    // Days logged in last 7 completed days (not including today)
+    let last7 = 0;
+    for (let i = 1; i <= 7; i++) {
+      if (loggedDates.has(addDays(today, -i))) last7++;
+    }
+
+    return { daysLogged, streak, last7 };
+  };
+
   const days = daysSince();
+  const stats = computeStats();
 
   if (!loaded) return null;
 
   return (
-    <div style={{ paddingTop: 'env(safe-area-inset-top)', background: '#f7f6f2', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'env(safe-area-inset-top)', background: ds.bg, minHeight: '100vh' }}>
       <div style={{ padding: '24px 20px' }}>
+        {/* Greeting header */}
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#b5b5b5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 8px' }}>
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-          </svg>
-          <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: '#3d3d3d', margin: 0 }}>Profile</h2>
+          <div style={{
+            width: 64, height: 64, borderRadius: '50%', margin: '0 auto 12px',
+            background: ds.greenLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={ds.green} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+            </svg>
+          </div>
+          {editingName ? (
+            <div className="flex items-center justify-center gap-2">
+              <input
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onBlur={handleNameSave}
+                onKeyDown={(e) => e.key === 'Enter' && handleNameSave()}
+                style={{
+                  fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600,
+                  color: ds.text, textAlign: 'center', border: 'none', borderBottom: '2px solid ' + ds.green,
+                  background: 'transparent', outline: 'none', width: 180, padding: '2px 0',
+                }}
+              />
+            </div>
+          ) : (
+            <h2
+              onClick={() => setEditingName(true)}
+              style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: ds.text, margin: 0, cursor: 'pointer' }}
+            >
+              Hi, {name} <span style={{ fontSize: 14, color: '#b5b5b5', display: 'inline-block', transform: 'scaleX(-1)' }}>✎</span>
+            </h2>
+          )}
         </div>
 
         {/* Days since transplant display */}
         {days != null && days >= 0 && (
           <div style={{
             background: 'linear-gradient(135deg, #8fae8b 0%, #a3c4a0 40%, #90c5b0 100%)',
-            borderRadius: 20, padding: '24px 20px', marginBottom: 20, textAlign: 'center',
+            borderRadius: 20, padding: '24px 20px', marginBottom: 16, textAlign: 'center',
           }}>
             <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 44, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{days}</div>
             <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', marginTop: 6, fontWeight: 500 }}>
@@ -581,29 +702,57 @@ function ProfilePage({ onExport }) {
           </div>
         )}
 
-        {/* Transplant date input */}
-        <div style={{
-          background: '#fff', borderRadius: 16, padding: '16px', marginBottom: 16,
-          boxShadow: '0 1px 4px rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.03)',
-        }}>
-          <label style={{ fontSize: 13, fontWeight: 500, color: '#7a7a7a', marginBottom: 6, display: 'block', fontFamily: "'DM Sans', sans-serif" }}>
-            Transplant Date
-          </label>
-          <input
-            type="date"
-            value={transplantDate}
-            onChange={(e) => handleDateChange(e.target.value)}
-            style={{
-              width: '100%', padding: '10px 14px', borderRadius: 12, border: '1.5px solid #e0ddd6',
-              background: '#fff', fontSize: 15, color: '#3d3d3d', outline: 'none', fontFamily: "'DM Sans', sans-serif",
-            }}
-          />
+        {/* Quick stats */}
+        <div className="grid grid-cols-3 gap-3" style={{ marginBottom: 16 }}>
+          <div style={{
+            background: ds.card, borderRadius: ds.radiusLg, padding: '14px 10px', textAlign: 'center',
+            boxShadow: ds.cardShadow, border: ds.cardBorder,
+          }}>
+            <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 28, fontWeight: 700, color: ds.text, lineHeight: 1 }}>{stats.streak}</div>
+            <div style={{ fontSize: 11, color: ds.greenSage, fontWeight: 600, marginTop: 4 }}>day streak</div>
+          </div>
+          <div style={{
+            background: ds.card, borderRadius: ds.radiusLg, padding: '14px 10px', textAlign: 'center',
+            boxShadow: ds.cardShadow, border: ds.cardBorder,
+          }}>
+            <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 28, fontWeight: 700, color: ds.text, lineHeight: 1 }}>{stats.daysLogged}</div>
+            <div style={{ fontSize: 11, color: '#8b9cc7', fontWeight: 600, marginTop: 4 }}>days logged</div>
+          </div>
+          <div style={{
+            background: ds.card, borderRadius: ds.radiusLg, padding: '14px 10px', textAlign: 'center',
+            boxShadow: ds.cardShadow, border: ds.cardBorder,
+          }}>
+            <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 28, fontWeight: 700, color: ds.text, lineHeight: 1 }}>{stats.last7}<span style={{ fontSize: 16, color: ds.textLight, fontWeight: 400 }}>/7</span></div>
+            <div style={{ fontSize: 11, color: '#b8a0c9', fontWeight: 600, marginTop: 4 }}>this week</div>
+          </div>
         </div>
 
-        {/* Export */}
-        <button onClick={onExport} className="w-full py-3 rounded-2xl text-sm" style={{ background: '#e8e6e1', color: '#7a7a7a' }}>
-          Download Backup
-        </button>
+        {/* Settings section */}
+        <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, color: '#a5a5a5', marginBottom: 8, paddingLeft: 4, fontFamily: "'DM Sans', sans-serif" }}>
+          Settings
+        </div>
+        <div style={{
+          background: ds.card, borderRadius: ds.radiusLg, marginBottom: 16, overflow: 'hidden',
+          boxShadow: ds.cardShadow, border: ds.cardBorder,
+        }}>
+          <div style={{ padding: '14px 16px', borderBottom: `1px solid ${ds.divider}` }}>
+            <label style={{ ...labelStyle, marginBottom: 6 }}>
+              Transplant Date
+            </label>
+            <input
+              type="date"
+              value={transplantDate}
+              onChange={(e) => handleDateChange(e.target.value)}
+              style={{
+                ...inputStyle,
+              }}
+            />
+          </div>
+          <button onClick={onExport} className="w-full text-left" style={{ padding: '16px', fontSize: 15, color: ds.text, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
+            Download Backup
+            <span style={{ float: 'right', color: ds.textPlaceholder }}>›</span>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -636,9 +785,9 @@ function PainSheet({ data, onChange }) {
   return (
     <>
       {data.map((e, i) => (
-        <div key={e.id} className="mb-4 p-3 rounded-2xl" style={{ background: '#f5f4f0' }}>
+        <div key={e.id} className="mb-4 p-3 rounded-2xl" style={{ background: ds.cardAlt }}>
           <div className="flex justify-between items-center mb-2">
-            <span style={{ fontSize: 12, color: '#999' }}>{e.time}</span>
+            <span style={{ fontSize: 12, color: ds.textLight }}>{e.time}</span>
             <button onClick={() => remove(i)} style={{ fontSize: 12, color: '#c97070' }}>Remove</button>
           </div>
           <Input label="Pain Level (1–10)" value={e.level} onChange={(v) => update(i, 'level', v)} type="number" placeholder="5" min={1} max={10} />
@@ -646,7 +795,7 @@ function PainSheet({ data, onChange }) {
           <TextArea label="Note" value={e.note} onChange={(v) => update(i, 'note', v)} />
         </div>
       ))}
-      <button onClick={addEntry} className="w-full py-3 rounded-2xl text-sm font-medium" style={{ background: '#e8f0e8', color: '#5a7a5a' }}>+ Add Pain Entry</button>
+      <button onClick={addEntry} className="w-full py-3 rounded-2xl text-sm font-medium" style={{ background: ds.greenLight, color: ds.green }}>+ Add Pain Entry</button>
     </>
   );
 }
@@ -666,7 +815,7 @@ function ActivitySheet({ data, onChange }) {
           <button onClick={() => removeWalk(i)} style={{ fontSize: 12, color: '#c97070' }}>×</button>
         </div>
       ))}
-      <button onClick={addWalk} className="mb-4 py-2 px-4 rounded-xl text-sm" style={{ background: '#e8f0e8', color: '#5a7a5a' }}>+ Add Walk</button>
+      <button onClick={addWalk} className="mb-4 py-2 px-4 rounded-xl text-sm" style={{ background: ds.greenLight, color: ds.green }}>+ Add Walk</button>
       <Field label="Energy"><ThumbPicker value={data.energyThumb} onChange={(v) => up('energyThumb', v)} /></Field>
       <TextArea label="Note" value={data.note} onChange={(v) => up('note', v)} />
     </>
@@ -704,7 +853,7 @@ function MoodSheet({ data, onChange }) {
               onClick={() => onChange({ ...data, value: data.value === m.value ? null : m.value })}
               className="text-3xl rounded-2xl w-14 h-14 flex items-center justify-center transition-all"
               style={{
-                background: data.value === m.value ? '#e8f0e8' : '#f0eeea',
+                background: data.value === m.value ? ds.greenLight : ds.divider,
                 opacity: data.value === m.value ? 1 : 0.4,
                 border: data.value === m.value ? '2px solid #a5c9a8' : '2px solid transparent',
               }}
@@ -723,12 +872,12 @@ function BowelSheet({ data, onChange }) {
       <div
         onClick={() => onChange({ ...data, hadBm: !data.hadBm })}
         className="flex items-center gap-3 p-4 rounded-2xl cursor-pointer mb-3"
-        style={{ background: data.hadBm ? '#e8f5e9' : '#f0eeea' }}
+        style={{ background: data.hadBm ? '#e8f5e9' : ds.divider }}
       >
-        <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: data.hadBm ? '#7fb685' : '#d4d0c8' }}>
+        <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: data.hadBm ? ds.greenCheck : '#d4d0c8' }}>
           {data.hadBm && <span className="text-white text-sm">✓</span>}
         </div>
-        <span style={{ fontSize: 15, color: '#3d3d3d' }}>Had bowel movement today</span>
+        <span style={{ fontSize: 15, color: ds.text }}>Had bowel movement today</span>
       </div>
       <TextArea label="Note" value={data.note} onChange={(v) => onChange({ ...data, note: v })} />
     </>
@@ -740,11 +889,11 @@ function SymptomsSheet({ data, onChange }) {
   return (
     <>
       {Object.entries(symptomLabels).map(([k, label]) => (
-        <div key={k} onClick={() => toggle(k)} className="flex items-center gap-3 py-3 px-1 cursor-pointer" style={{ borderBottom: '1px solid #f0eeea' }}>
-          <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: data[k] ? '#d4a574' : '#e0ddd6' }}>
+        <div key={k} onClick={() => toggle(k)} className="flex items-center gap-3 py-3 px-1 cursor-pointer" style={{ borderBottom: `1px solid ${ds.divider}` }}>
+          <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: data[k] ? '#d4a574' : ds.border }}>
             {data[k] && <span className="text-white text-xs">✓</span>}
           </div>
-          <span style={{ fontSize: 14, color: data[k] ? '#3d3d3d' : '#999' }}>{label}</span>
+          <span style={{ fontSize: 14, color: data[k] ? ds.text : ds.textLight }}>{label}</span>
         </div>
       ))}
       <div className="mt-3"><TextArea label="Note" value={data.note} onChange={(v) => onChange({ ...data, note: v })} /></div>
@@ -815,7 +964,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
   return (
     <div>
       <div className="flex justify-end mb-3">
-        <button onClick={() => setEditMode(!editMode)} className="text-sm px-4 py-1.5 rounded-full font-medium" style={{ background: editMode ? '#d4a574' : '#e8e6e1', color: editMode ? '#fff' : '#6b6b6b' }}>
+        <button onClick={() => setEditMode(!editMode)} className="text-sm px-4 py-1.5 rounded-full font-medium" style={{ background: editMode ? '#d4a574' : '#e8e6e1', color: editMode ? '#fff' : ds.textMuted }}>
           {editMode ? 'Done' : 'Edit'}
         </button>
       </div>
@@ -825,8 +974,8 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
         if (!meds.length) return null;
         return (
           <div key={group} className="mb-5">
-            <div className="text-xs font-semibold uppercase tracking-wider mb-2 px-1" style={{ color: '#a5a5a5' }}>{group}</div>
-            <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div className="mb-2 px-1" style={{ ...tileLabel, color: '#a5a5a5' }}>{group}</div>
+            <div className="rounded-2xl overflow-hidden" style={{ background: ds.card, boxShadow: ds.cardShadow }}>
               {meds.map((med, i) => {
                 const ev = getEvent(med.id);
                 return (
@@ -834,25 +983,25 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
                     key={med.id}
                     onClick={() => { if (editMode) setEditingMed({ ...med }); else openTakenSheet(med); }}
                     className="flex items-center gap-3 px-4 py-3.5 cursor-pointer active:bg-gray-50"
-                    style={{ borderBottom: i < meds.length - 1 ? '1px solid #f0eeea' : 'none' }}
+                    style={{ borderBottom: i < meds.length - 1 ? `1px solid ${ds.divider}` : 'none' }}
                   >
                     {!editMode ? (
-                      <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: ev ? '#7fb685' : '#e0ddd6' }}>
+                      <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: ev ? ds.greenCheck : ds.border }}>
                         {ev && <span className="text-white text-sm">✓</span>}
                       </div>
                     ) : (
-                      <span style={{ color: '#ccc' }}>›</span>
+                      <span style={{ color: ds.textPlaceholder }}>›</span>
                     )}
                     <div className="flex-1 min-w-0">
-                      <div style={{ fontSize: 15, color: '#3d3d3d', fontWeight: 500 }}>{med.name}</div>
-                      <div style={{ fontSize: 12, color: '#999' }}>
+                      <div style={{ fontSize: 15, color: ds.text, fontWeight: 500 }}>{med.name}</div>
+                      <div style={{ fontSize: 12, color: ds.textLight }}>
                         {med.doseMg} mg · {med.time}
                         {med.foodInstruction === 'before' && <span style={{ color: '#c9a87a' }}> · Before food</span>}
                         {med.foodInstruction === 'with' && <span style={{ color: '#8b9cc7' }}> · With food</span>}
                       </div>
                     </div>
-                    {ev && !editMode && <div style={{ fontSize: 12, color: '#7fb685' }}>✓ Taken {ev.takenAt}</div>}
-                    {editMode && <span style={{ color: '#ccc', fontSize: 18 }}>›</span>}
+                    {ev && !editMode && <div style={{ fontSize: 12, color: ds.greenCheck }}>✓ Taken {ev.takenAt}</div>}
+                    {editMode && <span style={{ color: ds.textPlaceholder, fontSize: 18 }}>›</span>}
                   </div>
                 );
               })}
@@ -862,7 +1011,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
       })}
 
       {editMode && (
-        <button onClick={() => setAddingMed(true)} className="w-full py-3 rounded-2xl text-sm font-medium" style={{ background: '#e8f0e8', color: '#5a7a5a' }}>+ Add Medication</button>
+        <button onClick={() => setAddingMed(true)} className="w-full py-3 rounded-2xl text-sm font-medium" style={{ background: ds.greenLight, color: ds.green }}>+ Add Medication</button>
       )}
 
       <BottomSheet open={!!editingMed} onClose={saveMedEdit} title="Edit Medication">
@@ -874,14 +1023,14 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
             <Field label="Group">
               <div className="flex gap-2">
                 {groups.map((g) => (
-                  <button key={g} onClick={() => setEditingMed({ ...editingMed, group: g })} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: editingMed.group === g ? '#7a9b7e' : '#f0eeea', color: editingMed.group === g ? '#fff' : '#6b6b6b' }}>{g}</button>
+                  <button key={g} onClick={() => setEditingMed({ ...editingMed, group: g })} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: editingMed.group === g ? ds.green : ds.divider, color: editingMed.group === g ? '#fff' : ds.textMuted }}>{g}</button>
                 ))}
               </div>
             </Field>
             <Field label="Food Instruction">
               <div className="flex gap-2">
                 {[{ value: '', label: 'None' }, { value: 'before', label: 'Before food' }, { value: 'with', label: 'With food' }].map((opt) => (
-                  <button key={opt.value} onClick={() => setEditingMed({ ...editingMed, foodInstruction: opt.value })} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: (editingMed.foodInstruction || '') === opt.value ? '#7a9b7e' : '#f0eeea', color: (editingMed.foodInstruction || '') === opt.value ? '#fff' : '#6b6b6b' }}>{opt.label}</button>
+                  <button key={opt.value} onClick={() => setEditingMed({ ...editingMed, foodInstruction: opt.value })} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: (editingMed.foodInstruction || '') === opt.value ? ds.green : ds.divider, color: (editingMed.foodInstruction || '') === opt.value ? '#fff' : ds.textMuted }}>{opt.label}</button>
                 ))}
               </div>
             </Field>
@@ -897,29 +1046,29 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
         <Field label="Group">
           <div className="flex gap-2">
             {groups.map((g) => (
-              <button key={g} onClick={() => setNewMed({ ...newMed, group: g })} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: newMed.group === g ? '#7a9b7e' : '#f0eeea', color: newMed.group === g ? '#fff' : '#6b6b6b' }}>{g}</button>
+              <button key={g} onClick={() => setNewMed({ ...newMed, group: g })} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: newMed.group === g ? ds.green : ds.divider, color: newMed.group === g ? '#fff' : ds.textMuted }}>{g}</button>
             ))}
           </div>
         </Field>
         <Field label="Food Instruction">
           <div className="flex gap-2">
             {[{ value: '', label: 'None' }, { value: 'before', label: 'Before food' }, { value: 'with', label: 'With food' }].map((opt) => (
-              <button key={opt.value} onClick={() => setNewMed({ ...newMed, foodInstruction: opt.value })} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: newMed.foodInstruction === opt.value ? '#7a9b7e' : '#f0eeea', color: newMed.foodInstruction === opt.value ? '#fff' : '#6b6b6b' }}>{opt.label}</button>
+              <button key={opt.value} onClick={() => setNewMed({ ...newMed, foodInstruction: opt.value })} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: newMed.foodInstruction === opt.value ? ds.green : ds.divider, color: newMed.foodInstruction === opt.value ? '#fff' : ds.textMuted }}>{opt.label}</button>
             ))}
           </div>
         </Field>
-        <button onClick={saveNewMed} className="w-full mt-3 py-3 rounded-2xl text-sm font-semibold" style={{ background: '#7a9b7e', color: '#fff' }}>Save Medication</button>
+        <button onClick={saveNewMed} className="w-full mt-3 py-3 rounded-2xl text-sm font-semibold" style={{ background: ds.green, color: '#fff' }}>Save Medication</button>
       </BottomSheet>
 
       <BottomSheet open={!!takenSheet} onClose={() => setTakenSheet(null)} title={takenSheet ? takenSheet.name : ''}>
         {takenSheet && (
           <>
-            <div className="mb-4 p-3 rounded-2xl" style={{ background: '#f5f4f0' }}>
-              <div style={{ fontSize: 14, color: '#7a7a7a' }}>{takenSheet.doseMg} mg</div>
+            <div className="mb-4 p-3 rounded-2xl" style={{ background: ds.cardAlt }}>
+              <div style={{ fontSize: 14, color: ds.textMuted }}>{takenSheet.doseMg} mg</div>
             </div>
             <Input label="Time Taken" value={takenSheet.takenAt} onChange={(v) => setTakenSheet({ ...takenSheet, takenAt: v })} type="time" />
             <TextArea label="Note (optional)" value={takenSheet.note} onChange={(v) => setTakenSheet({ ...takenSheet, note: v })} placeholder="Any notes..." />
-            <button onClick={saveTaken} className="w-full mt-2 py-3 rounded-2xl text-sm font-semibold" style={{ background: '#7a9b7e', color: '#fff' }}>Mark as Taken</button>
+            <button onClick={saveTaken} className="w-full mt-2 py-3 rounded-2xl text-sm font-semibold" style={{ background: ds.green, color: '#fff' }}>Mark as Taken</button>
             {getEvent(takenSheet.scheduleId) && (
               <button onClick={removeTaken} className="w-full mt-2 py-3 rounded-2xl text-sm" style={{ background: '#fce8e8', color: '#c97070' }}>Mark as Not Taken</button>
             )}
@@ -1003,14 +1152,14 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#f7f6f2' }}>
-        <div style={{ color: '#8fae8b', fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 18 }}>Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: ds.bg }}>
+        <div style={{ color: ds.greenSage, fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 18 }}>Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#f7f6f2', fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="min-h-screen" style={{ background: ds.bg, fontFamily: "'DM Sans', sans-serif" }}>
       {page === 'overview' && (
         <>
           {/* Header */}
@@ -1041,7 +1190,7 @@ export default function App() {
                   key={t}
                   onClick={() => setTab(t)}
                   className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                  style={{ background: tab === t ? '#fff' : 'transparent', color: tab === t ? '#3d3d3d' : '#999', boxShadow: tab === t ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}
+                  style={{ background: tab === t ? ds.card : 'transparent', color: tab === t ? ds.text : ds.textLight, boxShadow: tab === t ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}
                 >{t === 'overview' ? 'Overview' : 'Medication'}</button>
               ))}
             </div>
@@ -1052,7 +1201,7 @@ export default function App() {
             {tab === 'overview' ? (
               <div className="flex flex-col gap-3">
                 {isDayEmpty && (
-                  <div className="text-center py-2 px-4 rounded-2xl" style={{ background: 'rgba(143,174,139,0.08)', color: '#8fae8b', fontSize: 13 }}>
+                  <div className="text-center py-2 px-4 rounded-2xl" style={{ background: 'rgba(143,174,139,0.08)', color: ds.greenSage, fontSize: 13 }}>
                     Tap any card to start recording
                   </div>
                 )}

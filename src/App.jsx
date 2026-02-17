@@ -498,40 +498,22 @@ function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
     return closest;
   };
 
-  // Delay activation so quick swipes still work for day navigation
   const holdTimer = useRef(null);
-  const pendingPointer = useRef(null);
+  const tracking = useRef(false);
 
   const handlePointerDown = (e) => {
-    pendingPointer.current = { id: e.pointerId, target: e.currentTarget, x: e.clientX };
+    const x = e.clientX;
     holdTimer.current = setTimeout(() => {
-      const pp = pendingPointer.current;
-      if (pp && pp.target) {
-        pp.target.setPointerCapture(pp.id);
-        setActiveIdx(getNearestIdx(pp.x));
-      }
-    }, 150);
+      tracking.current = true;
+      setActiveIdx(getNearestIdx(x));
+    }, 200);
   };
   const handlePointerMove = (e) => {
-    if (activeIdx != null) {
-      setActiveIdx(getNearestIdx(e.clientX));
-    } else if (pendingPointer.current) {
-      // If finger moves significantly before hold activates, cancel
-      const dx = Math.abs(e.clientX - pendingPointer.current.x);
-      if (dx > 10) {
-        clearTimeout(holdTimer.current);
-        pendingPointer.current = null;
-      }
-    }
+    if (tracking.current) setActiveIdx(getNearestIdx(e.clientX));
   };
   const handlePointerUp = () => {
     clearTimeout(holdTimer.current);
-    pendingPointer.current = null;
-    setActiveIdx(null);
-  };
-  const handlePointerCancel = () => {
-    clearTimeout(holdTimer.current);
-    pendingPointer.current = null;
+    tracking.current = false;
     setActiveIdx(null);
   };
 
@@ -543,11 +525,11 @@ function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
-        style={{ width: '100%', height: 'auto', touchAction: activeIdx != null ? 'none' : 'pan-y' }}
+        style={{ width: '100%', height: 'auto' }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerCancel}
+        onPointerCancel={handlePointerUp}
       >
         {/* Y grid lines and labels */}
         {yLabels.map((v, i) => {

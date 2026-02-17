@@ -543,7 +543,7 @@ function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
-        style={{ width: '100%', height: 'auto', touchAction: activeIdx != null ? 'none' : 'pan-x' }}
+        style={{ width: '100%', height: 'auto', touchAction: activeIdx != null ? 'none' : 'pan-y' }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}

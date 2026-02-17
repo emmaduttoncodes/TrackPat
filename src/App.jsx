@@ -32,6 +32,15 @@ const nowTime = () => {
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 
+const isWithinSixMonths = (transplantDate) => {
+  if (!transplantDate) return true; // safe default — show all restrictions
+  const tx = new Date(transplantDate + 'T12:00:00');
+  const now = new Date();
+  const sixMonthsAgo = new Date(now);
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  return tx >= sixMonthsAgo;
+};
+
 const encouragements = [
   'One day at a time 💖', "You're doing so well 💛", 'Small steps, big courage 🌱',
   'Rest is part of healing 🌙', 'Every day is progress 💫', "You're stronger than you know 💖",
@@ -60,6 +69,36 @@ const symptomLabels = {
   fever: 'Fever', abdominalPainIncrease: 'Abdominal pain increase', jaundice: 'Jaundice',
   darkUrine: 'Dark urine', paleStools: 'Pale stools', reducedUrine: 'Reduced urine output',
   swelling: 'Swelling', nausea: 'Nausea', vomiting: 'Vomiting',
+};
+
+const FOOD_RESTRICTIONS = {
+  lifetime: [
+    { name: 'Grapefruit & grapefruit juice', reason: 'Drug interactions with immunosuppressants', icon: '🍊' },
+    { name: 'Seville/bitter oranges', reason: 'Drug interactions with immunosuppressants', icon: '🍊' },
+    { name: 'Pomelo', reason: 'Drug interactions with immunosuppressants', icon: '🍈' },
+    { name: 'Star fruit', reason: 'Toxicity risk for transplant patients', icon: '⭐' },
+    { name: "St John's Wort", reason: 'Alters immunosuppressant levels', icon: '🌿' },
+    { name: 'Herbal supplements without doctor approval', reason: 'May alter immunosuppressant levels', icon: '💊' },
+    { name: 'Alcohol', reason: 'Hepatotoxic to transplanted liver', icon: '🍷' },
+    { name: 'Raw/undercooked shellfish', reason: 'Fatal sepsis risk', icon: '🦪' },
+    { name: 'Unpasteurised dairy', reason: 'Ongoing infection risk', icon: '🧀' },
+    { name: 'Excessive liquorice', reason: 'Compounds medication side effects', icon: '🍬' },
+  ],
+  temporary: [
+    { name: 'Raw/undercooked eggs', reason: 'Salmonella risk', icon: '🥚' },
+    { name: 'Raw/undercooked meat', reason: 'Parasites and bacterial risk', icon: '🥩' },
+    { name: 'Raw/undercooked fish', reason: 'Parasites and bacterial risk', icon: '🐟' },
+    { name: 'Smoked salmon', reason: 'Listeria risk', icon: '🐠' },
+    { name: 'Soft/blue cheese from raw milk', reason: 'Listeria risk', icon: '🧀' },
+    { name: 'Unpasteurised juices', reason: 'Listeria risk', icon: '🧃' },
+    { name: 'Deli meats', reason: 'Listeria risk', icon: '🥓' },
+    { name: 'Pate', reason: 'Listeria risk', icon: '🍖' },
+    { name: 'Raw sprouts', reason: 'Contamination risk', icon: '🌱' },
+    { name: 'Unwashed raw fruit & veg', reason: 'Contamination risk', icon: '🥬' },
+    { name: 'Bulk bin foods', reason: 'Contamination risk', icon: '🫘' },
+    { name: 'Buffet/leftover food left out', reason: 'Bacterial growth risk', icon: '🍱' },
+    { name: 'Raw fermented foods', reason: 'Bacterial risk', icon: '🫙' },
+  ],
 };
 
 // ─── Design Tokens ────────────────────────────────────────────────────
@@ -869,10 +908,203 @@ function TrendsPage() {
   );
 }
 
+function FoodSafetyView({ transplantDate, onClose }) {
+  const [waiterMode, setWaiterMode] = useState(false);
+  const showTemporary = isWithinSixMonths(transplantDate);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  if (waiterMode) {
+    return (
+      <div className="fixed inset-0 z-50" style={{ background: ds.card, overflowY: 'auto' }}>
+        <div style={{ padding: '48px 24px 120px', maxWidth: 480, margin: '0 auto', textAlign: 'center' }}>
+          <h1 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 28, fontWeight: 700, color: ds.text, marginBottom: 8 }}>
+            I cannot eat these foods
+          </h1>
+          <p style={{ fontSize: 14, color: ds.textMuted, marginBottom: 32 }}>
+            Due to a medical condition and medication, please ensure my meal does not contain any of the following.
+          </p>
+
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ ...tileLabel, color: '#c97070', marginBottom: 12 }}>Always avoid</div>
+            {FOOD_RESTRICTIONS.lifetime.map((item, i) => (
+              <div key={i} style={{
+                padding: '14px 0', fontSize: 18, color: ds.text,
+                borderBottom: i < FOOD_RESTRICTIONS.lifetime.length - 1 ? `1px solid ${ds.divider}` : 'none',
+                fontFamily: "'DM Sans', sans-serif",
+              }}>
+                <span style={{ marginRight: 10 }}>{item.icon}</span>{item.name}
+              </div>
+            ))}
+
+            {showTemporary && (
+              <>
+                <div style={{ ...tileLabel, color: '#d4a574', marginTop: 28, marginBottom: 12 }}>Also avoiding temporarily</div>
+                {FOOD_RESTRICTIONS.temporary.map((item, i) => (
+                  <div key={i} style={{
+                    padding: '14px 0', fontSize: 18, color: ds.text,
+                    borderBottom: i < FOOD_RESTRICTIONS.temporary.length - 1 ? `1px solid ${ds.divider}` : 'none',
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}>
+                    <span style={{ marginRight: 10 }}>{item.icon}</span>{item.name}
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+
+          <p style={{ fontSize: 11, color: ds.textLight, marginTop: 32, lineHeight: 1.5 }}>
+            This list reflects post-transplant dietary guidelines. Please ask if unsure about any ingredient.
+          </p>
+        </div>
+
+        <div style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px',
+          paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
+          background: 'linear-gradient(transparent, white 20%)',
+        }}>
+          <button
+            onClick={() => setWaiterMode(false)}
+            style={{
+              width: '100%', padding: '16px', borderRadius: ds.radiusMd, border: 'none',
+              background: ds.green, color: '#fff', fontSize: 16, fontWeight: 600,
+              cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+            }}
+          >Done</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50" style={{ background: ds.bg, overflowY: 'auto' }}>
+      <div style={{ padding: '24px 20px 120px', paddingTop: 'calc(24px + env(safe-area-inset-top))' }}>
+        {/* Header */}
+        <div className="flex items-center gap-3" style={{ marginBottom: 20 }}>
+          <button
+            onClick={onClose}
+            className="flex items-center justify-center"
+            style={{
+              width: 34, height: 34, borderRadius: '50%',
+              background: '#e8e6e1', color: ds.textMuted, border: 'none',
+              fontSize: 18, cursor: 'pointer', flexShrink: 0,
+            }}
+          >‹</button>
+          <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: ds.text, margin: 0 }}>
+            Food safety
+          </h2>
+        </div>
+
+        {/* Status banner */}
+        <div style={{
+          background: showTemporary
+            ? 'linear-gradient(135deg, #d4a574 0%, #c9914a 100%)'
+            : 'linear-gradient(135deg, #8fae8b 0%, #a3c4a0 40%, #90c5b0 100%)',
+          borderRadius: ds.radiusLg, padding: '16px 20px', marginBottom: 20,
+        }}>
+          <div style={{ color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
+            {showTemporary ? 'Extra precautions apply' : 'Temporary restrictions relaxed'}
+          </div>
+          <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, marginTop: 4, fontFamily: "'DM Sans', sans-serif" }}>
+            {showTemporary
+              ? 'You are within 6 months of transplant. Additional food restrictions apply.'
+              : 'You are past the 6-month mark. Some temporary restrictions no longer apply.'}
+          </div>
+        </div>
+
+        {/* Lifetime restrictions */}
+        <div style={{
+          background: ds.card, borderRadius: ds.radiusLg, padding: '16px 18px',
+          boxShadow: ds.cardShadow, border: ds.cardBorder, marginBottom: 16,
+        }}>
+          <div style={{ ...tileLabel, color: '#c97070', marginBottom: 12 }}>Lifetime restrictions</div>
+          {FOOD_RESTRICTIONS.lifetime.map((item, i) => (
+            <div key={i} style={{
+              padding: '10px 0',
+              borderBottom: i < FOOD_RESTRICTIONS.lifetime.length - 1 ? `1px solid ${ds.divider}` : 'none',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 18, flexShrink: 0 }}>{item.icon}</span>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: ds.text, fontFamily: "'DM Sans', sans-serif" }}>{item.name}</div>
+                  <div style={{ fontSize: 12, color: ds.textMuted, marginTop: 2, fontFamily: "'DM Sans', sans-serif" }}>{item.reason}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Temporary restrictions */}
+        <div style={{
+          background: ds.card, borderRadius: ds.radiusLg, padding: '16px 18px',
+          boxShadow: ds.cardShadow, border: ds.cardBorder, marginBottom: 16,
+        }}>
+          <div style={{ ...tileLabel, color: '#d4a574', marginBottom: 12 }}>First 6 months</div>
+          {!showTemporary && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
+              background: 'rgba(143,174,139,0.1)', borderRadius: ds.radiusSm, marginBottom: 12,
+            }}>
+              <span style={{ color: ds.greenSage, fontSize: 16 }}>✓</span>
+              <span style={{ fontSize: 13, color: ds.greenSage, fontFamily: "'DM Sans', sans-serif" }}>
+                You are past 6 months — these temporary restrictions no longer apply.
+              </span>
+            </div>
+          )}
+          {FOOD_RESTRICTIONS.temporary.map((item, i) => (
+            <div key={i} style={{
+              padding: '10px 0',
+              borderBottom: i < FOOD_RESTRICTIONS.temporary.length - 1 ? `1px solid ${ds.divider}` : 'none',
+              opacity: showTemporary ? 1 : 0.5,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 18, flexShrink: 0 }}>{item.icon}</span>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: ds.text, fontFamily: "'DM Sans', sans-serif" }}>{item.name}</div>
+                  <div style={{ fontSize: 12, color: ds.textMuted, marginTop: 2, fontFamily: "'DM Sans', sans-serif" }}>{item.reason}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Disclaimer */}
+        <div style={{
+          background: ds.cardAlt, borderRadius: ds.radiusSm, padding: '12px 14px', marginBottom: 20,
+        }}>
+          <p style={{ fontSize: 12, color: ds.textMuted, lineHeight: 1.5, margin: 0, fontFamily: "'DM Sans', sans-serif" }}>
+            This list is based on general post-liver-transplant dietary guidelines. Always follow your transplant team's specific advice. When in doubt, ask your coordinator or dietitian.
+          </p>
+        </div>
+      </div>
+
+      {/* Show to waiter button */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px',
+        paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
+        background: `linear-gradient(transparent, ${ds.bg} 20%)`,
+      }}>
+        <button
+          onClick={() => setWaiterMode(true)}
+          style={{
+            width: '100%', padding: '16px', borderRadius: ds.radiusMd, border: 'none',
+            background: ds.green, color: '#fff', fontSize: 16, fontWeight: 600,
+            cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+          }}
+        >Show to waiter</button>
+      </div>
+    </div>
+  );
+}
+
 function ProfilePage({ onExport }) {
   const [transplantDate, setTransplantDate] = useState('');
   const [name, setName] = useState('Friend');
   const [editingName, setEditingName] = useState(false);
+  const [showFoodSafety, setShowFoodSafety] = useState(false);
   const [allDays, setAllDays] = useState(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -1039,6 +1271,28 @@ function ProfilePage({ onExport }) {
           </div>
         </div>
 
+        {/* Food safety card */}
+        <div
+          onClick={() => setShowFoodSafety(true)}
+          style={{
+            background: ds.card, borderRadius: ds.radiusLg, padding: '14px 16px',
+            boxShadow: ds.cardShadow, border: ds.cardBorder, marginBottom: 16,
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12,
+          }}
+          className="active:scale-[0.98]"
+        >
+          <span style={{ fontSize: 24 }}>🍽️</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 600, color: ds.text, fontFamily: "'DM Sans', sans-serif" }}>Food safety</div>
+            <div style={{ fontSize: 12, color: ds.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
+              {isWithinSixMonths(transplantDate)
+                ? 'Extra precautions — first 6 months'
+                : 'Lifetime restrictions apply'}
+            </div>
+          </div>
+          <span style={{ color: ds.textPlaceholder, fontSize: 18 }}>›</span>
+        </div>
+
         {/* Settings section */}
         <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, color: '#a5a5a5', marginBottom: 8, paddingLeft: 4, fontFamily: "'DM Sans', sans-serif" }}>
           Settings
@@ -1065,6 +1319,10 @@ function ProfilePage({ onExport }) {
             <span style={{ float: 'right', color: ds.textPlaceholder }}>›</span>
           </button>
         </div>
+
+        {showFoodSafety && (
+          <FoodSafetyView transplantDate={transplantDate} onClose={() => setShowFoodSafety(false)} />
+        )}
       </div>
     </div>
   );

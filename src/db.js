@@ -114,6 +114,37 @@ export async function saveSetting(key, value) {
   await db.settings.put({ key, value });
 }
 
+// ─── Import all data from JSON ────────────────────────────────────────
+export async function importAllData(data) {
+  await db.transaction('rw', db.days, db.medSchedules, db.medEvents, db.settings, async () => {
+    await db.days.clear();
+    await db.medSchedules.clear();
+    await db.medEvents.clear();
+    await db.settings.clear();
+
+    if (data.days && data.days.length) {
+      await db.days.bulkAdd(data.days.map((d) => {
+        const { date, ...rest } = d;
+        // Guard against already-nested data shape
+        const dayData = rest.data && typeof rest.data === 'object' && !Array.isArray(rest.data)
+          ? rest.data
+          : rest;
+        return { date, data: dayData };
+      }));
+    }
+    if (data.medSchedules && data.medSchedules.length) {
+      await db.medSchedules.bulkAdd(data.medSchedules);
+    }
+    if (data.medEvents && data.medEvents.length) {
+      await db.medEvents.bulkAdd(data.medEvents);
+    }
+    if (data.settings && typeof data.settings === 'object' && !Array.isArray(data.settings)) {
+      const entries = Object.entries(data.settings).map(([key, value]) => ({ key, value }));
+      if (entries.length) await db.settings.bulkAdd(entries);
+    }
+  });
+}
+
 // ─── Export all data as JSON ──────────────────────────────────────────
 export async function exportAllData() {
   const [days, schedules, events, settings] = await Promise.all([

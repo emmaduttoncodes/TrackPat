@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   db, emptyDay, loadDay, saveDay, loadAllDays, loadSchedules, saveSchedule,
-  deleteSchedule, loadMedEvents, saveMedEvent, deleteMedEvent, exportAllData,
-  loadSetting, saveSetting,
+  loadMedEvents, saveMedEvent, deleteMedEvent, exportAllData,
+  importAllData, loadSetting, saveSetting,
 } from './db';
 
 // ─── Helpers ───────────────────────────────────────────────────────────
@@ -135,6 +135,19 @@ const ds = {
   cardShadow: '0 1px 4px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.02)',
   cardBorder: '1px solid rgba(0,0,0,0.03)',
 };
+
+// ─── Toast ────────────────────────────────────────────────────────────
+function Toast({ message }) {
+  if (!message) return null;
+  return (
+    <div style={{
+      position: 'fixed', top: 'calc(16px + env(safe-area-inset-top))', left: '50%', transform: 'translateX(-50%)',
+      background: ds.card, color: ds.text, padding: '10px 20px', borderRadius: ds.radiusSm,
+      boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 60, fontSize: 14, fontWeight: 500,
+      fontFamily: "'DM Sans', sans-serif", whiteSpace: 'nowrap',
+    }}>{message}</div>
+  );
+}
 
 // ─── Bottom Sheet ──────────────────────────────────────────────────────
 function BottomSheet({ open, onClose, title, children }) {
@@ -508,6 +521,10 @@ function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
 
   const holdTimer = useRef(null);
   const tracking = useRef(false);
+
+  useEffect(() => {
+    return () => clearTimeout(holdTimer.current);
+  }, []);
 
   const handlePointerDown = (e) => {
     const x = e.clientX;
@@ -1160,13 +1177,14 @@ function FoodSafetyView({ transplantDate, onClose }) {
   );
 }
 
-function ProfilePage({ onExport }) {
+function ProfilePage({ onExport, onImport, showToast }) {
   const [transplantDate, setTransplantDate] = useState('');
   const [name, setName] = useState('Friend');
   const [editingName, setEditingName] = useState(false);
   const [showFoodSafety, setShowFoodSafety] = useState(false);
   const [allDays, setAllDays] = useState(null);
   const [loaded, setLoaded] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     Promise.all([
@@ -1181,16 +1199,25 @@ function ProfilePage({ onExport }) {
     });
   }, []);
 
-  const handleDateChange = (value) => {
+  const handleDateChange = async (value) => {
     setTransplantDate(value);
-    saveSetting('transplantDate', value);
+    try {
+      await saveSetting('transplantDate', value);
+      showToast('Transplant date saved');
+    } catch {
+      showToast('Failed to save transplant date');
+    }
   };
 
-  const handleNameSave = () => {
+  const handleNameSave = async () => {
     const trimmed = name.trim() || 'Friend';
     setName(trimmed);
-    saveSetting('userName', trimmed);
     setEditingName(false);
+    try {
+      await saveSetting('userName', trimmed);
+    } catch {
+      showToast('Failed to save name');
+    }
   };
 
   const daysSince = () => {
@@ -1391,6 +1418,19 @@ function ProfilePage({ onExport }) {
             Download backup
             <span style={{ float: 'right', color: ds.textPlaceholder }}>›</span>
           </button>
+          <div style={{ borderTop: `1px solid ${ds.divider}` }}>
+            <button onClick={() => fileInputRef.current?.click()} className="w-full text-left" style={{ padding: '16px', fontSize: 15, color: ds.text, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
+              Restore from backup
+              <span style={{ float: 'right', color: ds.textPlaceholder }}>›</span>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              style={{ display: 'none' }}
+              onChange={(e) => { if (e.target.files[0]) onImport(e.target.files[0]); e.target.value = ''; }}
+            />
+          </div>
           <div style={{ padding: '0 16px 14px', fontSize: 12, color: ds.textMuted, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif" }}>
             Your data is stored only on this device — it never leaves your phone and no one else can access it. However, it can be lost if you clear your browser data, delete the app, or switch devices. We recommend a monthly backup.
           </div>
@@ -1575,7 +1615,7 @@ function SymptomsSheet({ data, onChange }) {
 }
 
 // ─── Medication Tab ────────────────────────────────────────────────────
-function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate }) {
+function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate, showToast }) {
   const [editMode, setEditMode] = useState(false);
   const [editingMed, setEditingMed] = useState(null);
   const [addingMed, setAddingMed] = useState(false);
@@ -1596,42 +1636,81 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
 
   const saveTaken = async () => {
     if (!takenSheet) return;
-    await saveMedEvent({ date: currentDate, scheduleId: takenSheet.scheduleId, taken: true, takenAt: takenSheet.takenAt, takenDoseMg: takenSheet.doseMg, note: takenSheet.note });
-    const updated = await loadMedEvents(currentDate);
-    setEvents(updated);
-    setTakenSheet(null);
+    try {
+      await saveMedEvent({ date: currentDate, scheduleId: takenSheet.scheduleId, taken: true, takenAt: takenSheet.takenAt, takenDoseMg: takenSheet.doseMg, note: takenSheet.note });
+      const updated = await loadMedEvents(currentDate);
+      setEvents(updated);
+      setTakenSheet(null);
+      showToast('Medication logged');
+    } catch {
+      showToast('Failed to save — please try again');
+    }
   };
 
   const removeTaken = async () => {
     if (!takenSheet) return;
-    await deleteMedEvent(currentDate, takenSheet.scheduleId);
-    const updated = await loadMedEvents(currentDate);
-    setEvents(updated);
-    setTakenSheet(null);
+    try {
+      await deleteMedEvent(currentDate, takenSheet.scheduleId);
+      const updated = await loadMedEvents(currentDate);
+      setEvents(updated);
+      setTakenSheet(null);
+    } catch {
+      showToast('Failed to update — please try again');
+    }
   };
 
   const saveMedEdit = async () => {
     if (!editingMed) return;
-    await saveSchedule(editingMed);
-    const updated = await loadSchedules();
-    setSchedules(updated);
-    setEditingMed(null);
+    try {
+      await saveSchedule(editingMed);
+      const updated = await loadSchedules();
+      setSchedules(updated);
+      setEditingMed(null);
+      showToast('Medication updated');
+    } catch {
+      showToast('Failed to save — please try again');
+    }
   };
 
-  const deleteMed = async (id) => {
-    await deleteSchedule(id);
-    const updated = await loadSchedules();
-    setSchedules(updated);
-    setEditingMed(null);
+  const stopMed = async (id) => {
+    const med = schedules.find((s) => s.id === id);
+    if (!med) return;
+    try {
+      await saveSchedule({ ...med, active: false });
+      const updated = await loadSchedules();
+      setSchedules(updated);
+      setEditingMed(null);
+      showToast('Medication stopped');
+    } catch {
+      showToast('Failed to update — please try again');
+    }
+  };
+
+  const restartMed = async (id) => {
+    const med = schedules.find((s) => s.id === id);
+    if (!med) return;
+    try {
+      await saveSchedule({ ...med, active: true });
+      const updated = await loadSchedules();
+      setSchedules(updated);
+      showToast('Medication restarted');
+    } catch {
+      showToast('Failed to update — please try again');
+    }
   };
 
   const saveNewMed = async () => {
     if (!newMed.name) return;
-    await saveSchedule({ ...newMed, id: uid() });
-    const updated = await loadSchedules();
-    setSchedules(updated);
-    setNewMed({ name: '', doseMg: '', time: '08:00', group: 'Morning', active: true, foodInstruction: '' });
-    setAddingMed(false);
+    try {
+      await saveSchedule({ ...newMed, id: uid() });
+      const updated = await loadSchedules();
+      setSchedules(updated);
+      setNewMed({ name: '', doseMg: '', time: '08:00', group: 'Morning', active: true, foodInstruction: '' });
+      setAddingMed(false);
+      showToast('Medication added');
+    } catch {
+      showToast('Failed to save — please try again');
+    }
   };
 
   return (
@@ -1687,6 +1766,27 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
         <button onClick={() => setAddingMed(true)} className="w-full py-3 rounded-2xl text-sm font-medium" style={{ background: ds.greenLight, color: ds.green }}>+ Add medication</button>
       )}
 
+      {editMode && (() => {
+        const stopped = schedules.filter((s) => !s.active);
+        if (!stopped.length) return null;
+        return (
+          <div className="mt-6">
+            <div className="mb-2 px-1" style={{ ...tileLabel, color: '#a5a5a5' }}>Stopped medications</div>
+            <div className="rounded-2xl overflow-hidden" style={{ background: ds.card, boxShadow: ds.cardShadow, opacity: 0.7 }}>
+              {stopped.map((med, i) => (
+                <div key={med.id} className="flex items-center gap-3 px-4 py-3.5" style={{ borderBottom: i < stopped.length - 1 ? `1px solid ${ds.divider}` : 'none' }}>
+                  <div className="flex-1 min-w-0">
+                    <div style={{ fontSize: 15, color: ds.textMuted, fontWeight: 500 }}>{med.name}</div>
+                    <div style={{ fontSize: 12, color: ds.textLight }}>{med.doseMg} mg · {med.time}</div>
+                  </div>
+                  <button onClick={() => restartMed(med.id)} className="text-sm px-3 py-1.5 rounded-full font-medium" style={{ background: ds.greenLight, color: ds.green }}>Restart</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       <BottomSheet open={!!editingMed} onClose={saveMedEdit} title="Edit medication">
         {editingMed && (
           <>
@@ -1707,7 +1807,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
                 ))}
               </div>
             </Field>
-            <button onClick={() => deleteMed(editingMed.id)} className="w-full mt-4 py-3 rounded-2xl text-sm" style={{ background: '#fce8e8', color: '#c97070' }}>Delete medication</button>
+            <button onClick={() => { if (window.confirm('Stop this medication? It will be moved to the stopped list.')) stopMed(editingMed.id); }} className="w-full mt-4 py-3 rounded-2xl text-sm" style={{ background: '#fce8e8', color: '#c97070' }}>Stop medication</button>
           </>
         )}
       </BottomSheet>
@@ -1763,6 +1863,23 @@ export default function App() {
   const [medEvents, setMedEvents] = useState([]);
   const [activeSheet, setActiveSheet] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [toastMsg, setToastMsg] = useState('');
+  const [profileKey, setProfileKey] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingName, setOnboardingName] = useState('');
+  const [onboardingDate, setOnboardingDate] = useState('');
+
+  const toastTimer = useRef(null);
+
+  const showToast = useCallback((msg) => {
+    clearTimeout(toastTimer.current);
+    setToastMsg(msg);
+    toastTimer.current = setTimeout(() => setToastMsg(''), 2000);
+  }, []);
+
+  useEffect(() => {
+    return () => clearTimeout(toastTimer.current);
+  }, []);
 
   // Scroll to top when switching pages
   useEffect(() => { window.scrollTo(0, 0); }, [page]);
@@ -1787,29 +1904,79 @@ export default function App() {
     return () => { cancelled = true; };
   }, [currentDate]);
 
+  // Check for first-time user → show onboarding
+  useEffect(() => {
+    loadSetting('userName').then((name) => {
+      if (!name) setShowOnboarding(true);
+    });
+  }, []);
+
+  const completeOnboarding = async () => {
+    const trimmed = onboardingName.trim() || 'Friend';
+    try {
+      await saveSetting('userName', trimmed);
+      if (onboardingDate) await saveSetting('transplantDate', onboardingDate);
+      setShowOnboarding(false);
+    } catch {
+      showToast('Failed to save — please try again');
+    }
+  };
+
   // Auto-save day data to IndexedDB
   const updateDay = useCallback((section, value) => {
     setDayData((prev) => {
       const updated = { ...prev, [section]: value };
-      saveDay(currentDate, updated); // fire-and-forget persist
+      saveDay(currentDate, updated).catch(() => showToast('Failed to save — please try again'));
       setIsDayEmpty(false);
       return updated;
     });
-  }, [currentDate]);
+  }, [currentDate, showToast]);
 
   const canGoForward = currentDate < todayStr();
 
   // Export backup
   const handleExport = async () => {
-    const data = await exportAllData();
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `recovery-log-backup-${todayStr()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const data = await exportAllData();
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `recovery-log-backup-${todayStr()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Backup downloaded');
+    } catch {
+      showToast('Failed to export backup');
+    }
+  };
+
+  const handleImport = async (file) => {
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!data.version || !Array.isArray(data.days) || !Array.isArray(data.medSchedules)) {
+        showToast('Invalid backup file');
+        return;
+      }
+      if (!window.confirm('Restore from this backup? This will replace all current data.')) return;
+      await importAllData(data);
+      // Reload current state
+      const [day, scheds, evts] = await Promise.all([
+        loadDay(currentDate),
+        loadSchedules(),
+        loadMedEvents(currentDate),
+      ]);
+      setDayData(day || emptyDay());
+      setIsDayEmpty(!day);
+      setSchedules(scheds);
+      setMedEvents(evts);
+      setProfileKey((k) => k + 1);
+      showToast('Backup restored');
+    } catch {
+      showToast('Failed to restore backup');
+    }
   };
 
   const sheetConfigs = {
@@ -1833,6 +2000,52 @@ export default function App() {
 
   return (
     <div className="min-h-screen" style={{ background: ds.bg, fontFamily: "'DM Sans', sans-serif" }}>
+      <Toast message={toastMsg} />
+
+      {showOnboarding && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: ds.bg }}>
+          <div style={{ width: '100%', maxWidth: 380, padding: '0 24px' }}>
+            <div style={{ textAlign: 'center', marginBottom: 32 }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🌱</div>
+              <h1 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 26, fontWeight: 700, color: ds.text, margin: '0 0 8px' }}>Welcome to TrackPat</h1>
+              <p style={{ fontSize: 14, color: ds.textMuted, lineHeight: 1.5, margin: 0 }}>
+                A simple daily log to support your recovery journey after transplant.
+              </p>
+            </div>
+            <div style={{
+              background: ds.card, borderRadius: ds.radiusLg, padding: '20px 18px',
+              boxShadow: ds.cardShadow, border: ds.cardBorder,
+            }}>
+              <Field label="Your name">
+                <input
+                  autoFocus
+                  value={onboardingName}
+                  onChange={(e) => setOnboardingName(e.target.value)}
+                  placeholder="e.g. Pat"
+                  style={inputStyle}
+                />
+              </Field>
+              <Field label="Transplant date (optional)">
+                <input
+                  type="date"
+                  value={onboardingDate}
+                  onChange={(e) => setOnboardingDate(e.target.value)}
+                  style={inputStyle}
+                />
+              </Field>
+              <button
+                onClick={completeOnboarding}
+                style={{
+                  width: '100%', padding: '14px', borderRadius: ds.radiusMd, border: 'none',
+                  background: ds.green, color: '#fff', fontSize: 16, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", marginTop: 8,
+                }}
+              >Get started</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {page === 'overview' && (
         <div>
           {/* Header */}
@@ -1902,7 +2115,7 @@ export default function App() {
                 <SymptomsTile data={dayData.symptoms} onClick={() => setActiveSheet('symptoms')} />
               </div>
             ) : (
-              <MedicationTab schedules={schedules} setSchedules={setSchedules} events={medEvents} setEvents={setMedEvents} currentDate={currentDate} />
+              <MedicationTab schedules={schedules} setSchedules={setSchedules} events={medEvents} setEvents={setMedEvents} currentDate={currentDate} showToast={showToast} />
             )}
           </div>
 
@@ -1916,7 +2129,7 @@ export default function App() {
       )}
 
       {page === 'trends' && <TrendsPage />}
-      {page === 'profile' && <ProfilePage onExport={handleExport} />}
+      {page === 'profile' && <ProfilePage key={profileKey} onExport={handleExport} onImport={handleImport} showToast={showToast} />}
 
       {/* Spacer for bottom nav */}
       <div style={{ height: 72 }} />

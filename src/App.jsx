@@ -1331,7 +1331,10 @@ function ProfilePage({ onExport }) {
           </div>
         </div>
 
-        {/* Food safety card */}
+        {/* Food safety */}
+        <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, color: '#a5a5a5', marginBottom: 8, paddingLeft: 4, fontFamily: "'DM Sans', sans-serif" }}>
+          Health reference
+        </div>
         <div
           onClick={() => setShowFoodSafety(true)}
           style={{
@@ -1353,7 +1356,7 @@ function ProfilePage({ onExport }) {
           <span style={{ color: ds.textPlaceholder, fontSize: 18 }}>›</span>
         </div>
 
-        {/* Settings section */}
+        {/* Settings */}
         <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, color: '#a5a5a5', marginBottom: 8, paddingLeft: 4, fontFamily: "'DM Sans', sans-serif" }}>
           Settings
         </div>
@@ -1361,7 +1364,7 @@ function ProfilePage({ onExport }) {
           background: ds.card, borderRadius: ds.radiusLg, marginBottom: 16, overflow: 'hidden',
           boxShadow: ds.cardShadow, border: ds.cardBorder,
         }}>
-          <div style={{ padding: '14px 16px', borderBottom: `1px solid ${ds.divider}` }}>
+          <div style={{ padding: '14px 16px' }}>
             <label style={{ ...labelStyle, marginBottom: 6 }}>
               Transplant date
             </label>
@@ -1374,10 +1377,50 @@ function ProfilePage({ onExport }) {
               }}
             />
           </div>
+        </div>
+
+        {/* Your data */}
+        <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, color: '#a5a5a5', marginBottom: 8, paddingLeft: 4, fontFamily: "'DM Sans', sans-serif" }}>
+          Your data
+        </div>
+        <div style={{
+          background: ds.card, borderRadius: ds.radiusLg, marginBottom: 16, overflow: 'hidden',
+          boxShadow: ds.cardShadow, border: ds.cardBorder,
+        }}>
           <button onClick={onExport} className="w-full text-left" style={{ padding: '16px', fontSize: 15, color: ds.text, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
             Download backup
             <span style={{ float: 'right', color: ds.textPlaceholder }}>›</span>
           </button>
+          <div style={{ padding: '0 16px 14px', fontSize: 12, color: ds.textMuted, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif" }}>
+            Your data is stored only on this device — it never leaves your phone and no one else can access it. However, it can be lost if you clear your browser data, delete the app, or switch devices. We recommend a monthly backup.
+          </div>
+        </div>
+
+        {/* About */}
+        <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, color: '#a5a5a5', marginBottom: 8, paddingLeft: 4, fontFamily: "'DM Sans', sans-serif" }}>
+          About
+        </div>
+        <div style={{
+          background: ds.card, borderRadius: ds.radiusLg, padding: '16px 18px', marginBottom: 16,
+          boxShadow: ds.cardShadow, border: ds.cardBorder,
+        }}>
+          <p style={{ fontSize: 13, color: ds.text, lineHeight: 1.6, margin: '0 0 12px', fontFamily: "'DM Sans', sans-serif" }}>
+            TrackPat was made with love to support my partner after his liver transplant. It started as a simple way to keep on top of daily recovery — and grew into something we hope might help others too.
+          </p>
+          <p style={{ fontSize: 12, color: ds.textMuted, lineHeight: 1.6, margin: '0 0 12px', fontFamily: "'DM Sans', sans-serif" }}>
+            This app is designed to support your recovery journey, not to replace medical advice. It is not a diagnostic tool — always follow your transplant team's guidance and contact them with any concerns.
+          </p>
+          <p style={{ fontSize: 12, color: ds.textMuted, lineHeight: 1.6, margin: 0, fontFamily: "'DM Sans', sans-serif" }}>
+            We'd love to hear from you — whether it's feedback, suggestions, or just to say hello.
+          </p>
+          <a
+            href="mailto:emma@emmadutton.dev"
+            style={{
+              display: 'block', marginTop: 12, padding: '12px', borderRadius: ds.radiusSm,
+              background: ds.greenLight, color: ds.green, fontSize: 14, fontWeight: 600,
+              textAlign: 'center', textDecoration: 'none', fontFamily: "'DM Sans', sans-serif",
+            }}
+          >Send feedback</a>
         </div>
 
         {showFoodSafety && (

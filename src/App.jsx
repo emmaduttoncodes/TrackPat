@@ -561,7 +561,7 @@ function buildClinicianReport({ patientName, transplantDate, startDate, endDate,
   // Mood distribution
   const moodCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   moodData.forEach(d => { moodCounts[d.y] = (moodCounts[d.y] || 0) + 1; });
-  const moodLabels = { 1: 'Very Low', 2: 'Low', 3: 'Neutral', 4: 'Good', 5: 'Great' };
+  const moodLabels = { 1: 'Very low', 2: 'Low', 3: 'Neutral', 4: 'Good', 5: 'Great' };
   const moodColors = { 1: '#c97070', 2: '#d4a574', 3: '#c9c0a0', 4: '#8fae8b', 5: '#7a9b7e' };
   let moodBarsHtml = '';
   if (moodCount > 0) {
@@ -613,7 +613,7 @@ function buildClinicianReport({ patientName, transplantDate, startDate, endDate,
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Recovery Report – ${patientName}</title>
+<title>Recovery report – ${patientName}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#3d3d3d;background:#fff;font-size:13px;line-height:1.5}
@@ -649,7 +649,7 @@ tbody tr:last-child td{border-bottom:none}
 <body>
 <div class="accent-bar"></div>
 <div class="container">
-  <h1>Recovery Progress Report</h1>
+  <h1>Recovery progress report</h1>
   <div class="subtitle">${patientName}</div>
   <div class="meta">
     ${transplantDate ? `<span>Transplant: ${fmtDate(transplantDate)}</span>` : ''}
@@ -662,21 +662,21 @@ tbody tr:last-child td{border-bottom:none}
   <div class="stats-grid">
     <div class="stat-box">
       <div class="stat-num">${avgPain}</div>
-      <div class="stat-label">Avg Pain</div>
+      <div class="stat-label">Avg pain</div>
       <div class="stat-sub">${maxPain !== '—' ? `Max: ${maxPain}/10` : ''}</div>
     </div>
     <div class="stat-box">
       <div class="stat-num">${totalActivity || '—'}</div>
-      <div class="stat-label">Total Activity (min)</div>
+      <div class="stat-label">Total activity (min)</div>
       <div class="stat-sub">${avgActivity !== '—' ? `Avg: ${avgActivity}/day` : ''}</div>
     </div>
     <div class="stat-box">
       <div class="stat-num" style="font-size:${weightRange.length > 10 ? '18' : '26'}px">${weightRange}</div>
-      <div class="stat-label">Weight Range</div>
+      <div class="stat-label">Weight range</div>
     </div>
     <div class="stat-box">
       <div class="stat-num">${moodCount}</div>
-      <div class="stat-label">Mood Entries</div>
+      <div class="stat-label">Mood entries</div>
     </div>
   </div>
 
@@ -820,7 +820,7 @@ function TrendsPage() {
                 padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
                 fontFamily: "'DM Sans', sans-serif",
               }}
-            >Export for Clinician</button>
+            >Export for clinician</button>
           ) : null}
         </div>
 
@@ -840,12 +840,12 @@ function TrendsPage() {
           formatY={(v) => moodEmojis[Math.round(v)] || Math.round(v)} />
       </div>
 
-      <BottomSheet open={showExportSheet} onClose={() => setShowExportSheet(false)} title="Export for Clinician">
+      <BottomSheet open={showExportSheet} onClose={() => setShowExportSheet(false)} title="Export for clinician">
         <p style={{ fontSize: 13, color: ds.textMuted, marginBottom: 16 }}>Choose a time period for the report. A printable document will open in a new tab.</p>
         {[
-          { key: '1w', label: '1 Week', sub: 'Last 7 days' },
-          { key: '1m', label: '1 Month', sub: 'Last 30 days' },
-          { key: '3m', label: '3 Months', sub: 'Last 90 days' },
+          { key: '1w', label: '1 week', sub: 'Last 7 days' },
+          { key: '1m', label: '1 month', sub: 'Last 30 days' },
+          { key: '3m', label: '3 months', sub: 'Last 90 days' },
         ].map((opt) => (
           <button
             key={opt.key}
@@ -1049,7 +1049,7 @@ function ProfilePage({ onExport }) {
         }}>
           <div style={{ padding: '14px 16px', borderBottom: `1px solid ${ds.divider}` }}>
             <label style={{ ...labelStyle, marginBottom: 6 }}>
-              Transplant Date
+              Transplant date
             </label>
             <input
               type="date"
@@ -1061,7 +1061,7 @@ function ProfilePage({ onExport }) {
             />
           </div>
           <button onClick={onExport} className="w-full text-left" style={{ padding: '16px', fontSize: 15, color: ds.text, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
-            Download Backup
+            Download backup
             <span style={{ float: 'right', color: ds.textPlaceholder }}>›</span>
           </button>
         </div>
@@ -1080,7 +1080,7 @@ function VitalsSheet({ data, onChange }) {
         <Input label="Systolic BP" value={data.systolic} onChange={(v) => up('systolic', v)} type="number" placeholder="120" min={50} max={250} />
         <Input label="Diastolic BP" value={data.diastolic} onChange={(v) => up('diastolic', v)} type="number" placeholder="80" min={30} max={180} />
       </div>
-      <Input label="Heart Rate (bpm)" value={data.heartRate} onChange={(v) => up('heartRate', v)} type="number" placeholder="72" min={20} max={250} />
+      <Input label="Heart rate (bpm)" value={data.heartRate} onChange={(v) => up('heartRate', v)} type="number" placeholder="72" min={20} max={250} />
       <Input label="Weight (kg)" value={data.weightKg} onChange={(v) => up('weightKg', v)} type="number" placeholder="65" min={20} max={300} />
     </>
   );
@@ -1102,12 +1102,12 @@ function PainSheet({ data, onChange }) {
             <span style={{ fontSize: 12, color: ds.textLight }}>{e.time}</span>
             <button onClick={() => remove(i)} style={{ fontSize: 12, color: '#c97070' }}>Remove</button>
           </div>
-          <Input label="Pain Level (1–10)" value={e.level} onChange={(v) => update(i, 'level', v)} type="number" placeholder="5" min={1} max={10} />
+          <Input label="Pain level (1–10)" value={e.level} onChange={(v) => update(i, 'level', v)} type="number" placeholder="5" min={1} max={10} />
           <Input label="Location" value={e.location} onChange={(v) => update(i, 'location', v)} placeholder="e.g. abdomen" />
           <TextArea label="Note" value={e.note} onChange={(v) => update(i, 'note', v)} />
         </div>
       ))}
-      <button onClick={addEntry} className="w-full py-3 rounded-2xl text-sm font-medium" style={{ background: ds.greenLight, color: ds.green }}>+ Add Pain Entry</button>
+      <button onClick={addEntry} className="w-full py-3 rounded-2xl text-sm font-medium" style={{ background: ds.greenLight, color: ds.green }}>+ Add pain entry</button>
     </>
   );
 }
@@ -1127,7 +1127,7 @@ function ActivitySheet({ data, onChange }) {
           <button onClick={() => removeWalk(i)} style={{ fontSize: 12, color: '#c97070' }}>×</button>
         </div>
       ))}
-      <button onClick={addWalk} className="mb-4 py-2 px-4 rounded-xl text-sm" style={{ background: ds.greenLight, color: ds.green }}>+ Add Walk</button>
+      <button onClick={addWalk} className="mb-4 py-2 px-4 rounded-xl text-sm" style={{ background: ds.greenLight, color: ds.green }}>+ Add walk</button>
       <Field label="Energy"><ThumbPicker value={data.energyThumb} onChange={(v) => up('energyThumb', v)} /></Field>
       <TextArea label="Note" value={data.note} onChange={(v) => up('note', v)} />
     </>
@@ -1138,8 +1138,8 @@ function SleepSheet({ data, onChange }) {
   const up = (k, v) => onChange({ ...data, [k]: v });
   return (
     <>
-      <Input label="Hours Slept" value={data.hours} onChange={(v) => up('hours', v)} type="number" placeholder="7" min={0} max={24} />
-      <Field label="Sleep Quality"><ThumbPicker value={data.qualityThumb} onChange={(v) => up('qualityThumb', v)} /></Field>
+      <Input label="Hours slept" value={data.hours} onChange={(v) => up('hours', v)} type="number" placeholder="7" min={0} max={24} />
+      <Field label="Sleep quality"><ThumbPicker value={data.qualityThumb} onChange={(v) => up('qualityThumb', v)} /></Field>
       <TextArea label="Note" value={data.note} onChange={(v) => up('note', v)} />
     </>
   );
@@ -1282,7 +1282,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
       </div>
 
       {groups.map((group) => {
-        const meds = schedules.filter((s) => s.group === group && s.active);
+        const meds = schedules.filter((s) => s.group === group && s.active).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
         if (!meds.length) return null;
         return (
           <div key={group} className="mb-5">
@@ -1323,10 +1323,10 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
       })}
 
       {editMode && (
-        <button onClick={() => setAddingMed(true)} className="w-full py-3 rounded-2xl text-sm font-medium" style={{ background: ds.greenLight, color: ds.green }}>+ Add Medication</button>
+        <button onClick={() => setAddingMed(true)} className="w-full py-3 rounded-2xl text-sm font-medium" style={{ background: ds.greenLight, color: ds.green }}>+ Add medication</button>
       )}
 
-      <BottomSheet open={!!editingMed} onClose={saveMedEdit} title="Edit Medication">
+      <BottomSheet open={!!editingMed} onClose={saveMedEdit} title="Edit medication">
         {editingMed && (
           <>
             <Input label="Name" value={editingMed.name} onChange={(v) => setEditingMed({ ...editingMed, name: v })} />
@@ -1339,19 +1339,19 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
                 ))}
               </div>
             </Field>
-            <Field label="Food Instruction">
+            <Field label="Food instruction">
               <div className="flex gap-2">
                 {[{ value: '', label: 'None' }, { value: 'before', label: 'Before food' }, { value: 'with', label: 'With food' }].map((opt) => (
                   <button key={opt.value} onClick={() => setEditingMed({ ...editingMed, foodInstruction: opt.value })} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: (editingMed.foodInstruction || '') === opt.value ? ds.green : ds.divider, color: (editingMed.foodInstruction || '') === opt.value ? '#fff' : ds.textMuted }}>{opt.label}</button>
                 ))}
               </div>
             </Field>
-            <button onClick={() => deleteMed(editingMed.id)} className="w-full mt-4 py-3 rounded-2xl text-sm" style={{ background: '#fce8e8', color: '#c97070' }}>Delete Medication</button>
+            <button onClick={() => deleteMed(editingMed.id)} className="w-full mt-4 py-3 rounded-2xl text-sm" style={{ background: '#fce8e8', color: '#c97070' }}>Delete medication</button>
           </>
         )}
       </BottomSheet>
 
-      <BottomSheet open={addingMed} onClose={() => setAddingMed(false)} title="Add Medication">
+      <BottomSheet open={addingMed} onClose={() => setAddingMed(false)} title="Add medication">
         <Input label="Name" value={newMed.name} onChange={(v) => setNewMed({ ...newMed, name: v })} placeholder="Medication name" />
         <Input label="Dose (mg)" value={newMed.doseMg} onChange={(v) => setNewMed({ ...newMed, doseMg: v })} type="number" />
         <Input label="Time" value={newMed.time} onChange={(v) => setNewMed({ ...newMed, time: v })} type="time" />
@@ -1362,14 +1362,14 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
             ))}
           </div>
         </Field>
-        <Field label="Food Instruction">
+        <Field label="Food instruction">
           <div className="flex gap-2">
             {[{ value: '', label: 'None' }, { value: 'before', label: 'Before food' }, { value: 'with', label: 'With food' }].map((opt) => (
               <button key={opt.value} onClick={() => setNewMed({ ...newMed, foodInstruction: opt.value })} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: newMed.foodInstruction === opt.value ? ds.green : ds.divider, color: newMed.foodInstruction === opt.value ? '#fff' : ds.textMuted }}>{opt.label}</button>
             ))}
           </div>
         </Field>
-        <button onClick={saveNewMed} className="w-full mt-3 py-3 rounded-2xl text-sm font-semibold" style={{ background: ds.green, color: '#fff' }}>Save Medication</button>
+        <button onClick={saveNewMed} className="w-full mt-3 py-3 rounded-2xl text-sm font-semibold" style={{ background: ds.green, color: '#fff' }}>Save medication</button>
       </BottomSheet>
 
       <BottomSheet open={!!takenSheet} onClose={() => setTakenSheet(null)} title={takenSheet ? takenSheet.name : ''}>
@@ -1378,11 +1378,11 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
             <div className="mb-4 p-3 rounded-2xl" style={{ background: ds.cardAlt }}>
               <div style={{ fontSize: 14, color: ds.textMuted }}>{takenSheet.doseMg} mg</div>
             </div>
-            <Input label="Time Taken" value={takenSheet.takenAt} onChange={(v) => setTakenSheet({ ...takenSheet, takenAt: v })} type="time" />
+            <Input label="Time taken" value={takenSheet.takenAt} onChange={(v) => setTakenSheet({ ...takenSheet, takenAt: v })} type="time" />
             <TextArea label="Note (optional)" value={takenSheet.note} onChange={(v) => setTakenSheet({ ...takenSheet, note: v })} placeholder="Any notes..." />
-            <button onClick={saveTaken} className="w-full mt-2 py-3 rounded-2xl text-sm font-semibold" style={{ background: ds.green, color: '#fff' }}>Mark as Taken</button>
+            <button onClick={saveTaken} className="w-full mt-2 py-3 rounded-2xl text-sm font-semibold" style={{ background: ds.green, color: '#fff' }}>Mark as taken</button>
             {getEvent(takenSheet.scheduleId) && (
-              <button onClick={removeTaken} className="w-full mt-2 py-3 rounded-2xl text-sm" style={{ background: '#fce8e8', color: '#c97070' }}>Mark as Not Taken</button>
+              <button onClick={removeTaken} className="w-full mt-2 py-3 rounded-2xl text-sm" style={{ background: '#fce8e8', color: '#c97070' }}>Mark as not taken</button>
             )}
           </>
         )}
@@ -1458,7 +1458,7 @@ export default function App() {
     sleep: { title: 'Sleep', content: <SleepSheet data={dayData.sleep} onChange={(v) => updateDay('sleep', v)} /> },
     appetite: { title: 'Appetite', content: <AppetiteSheet data={dayData.appetite} onChange={(v) => updateDay('appetite', v)} /> },
     mood: { title: 'Mood', content: <MoodSheet data={dayData.mood} onChange={(v) => updateDay('mood', v)} /> },
-    bowel: { title: 'Bowel Movement', content: <BowelSheet data={dayData.bowel} onChange={(v) => updateDay('bowel', v)} /> },
+    bowel: { title: 'Bowel movement', content: <BowelSheet data={dayData.bowel} onChange={(v) => updateDay('bowel', v)} /> },
     symptoms: { title: 'Symptoms', content: <SymptomsSheet data={dayData.symptoms} onChange={(v) => updateDay('symptoms', v)} /> },
   };
 
@@ -1533,7 +1533,7 @@ export default function App() {
                     empty={!dayData.appetite.thumb && !(dayData.appetite.note && dayData.appetite.note.trim())}
                     onClick={() => setActiveSheet('appetite')} />
                   <SmallTile label="Bowels" icon="🚽" color="#8fb8b0"
-                    value={dayData.bowel.hadBm ? '✓' : null}
+                    value={dayData.bowel.hadBm ? '💩' : null}
                     sub={dayData.bowel.hadBm ? (dayData.bowel.note ? dayData.bowel.note : 'Yes') : (dayData.bowel.note ? dayData.bowel.note : null)}
                     empty={!dayData.bowel.hadBm && !(dayData.bowel.note && dayData.bowel.note.trim())}
                     onClick={() => setActiveSheet('bowel')} />

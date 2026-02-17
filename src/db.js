@@ -116,10 +116,11 @@ export async function saveSetting(key, value) {
 
 // ─── Export all data as JSON ──────────────────────────────────────────
 export async function exportAllData() {
-  const [days, schedules, events] = await Promise.all([
+  const [days, schedules, events, settings] = await Promise.all([
     db.days.toArray(),
     db.medSchedules.toArray(),
     db.medEvents.toArray(),
+    db.settings.toArray(),
   ]);
   return {
     exportedAt: new Date().toISOString(),
@@ -127,5 +128,6 @@ export async function exportAllData() {
     days: days.map((d) => ({ date: d.date, ...d.data })),
     medSchedules: schedules,
     medEvents: events,
+    settings: Object.fromEntries(settings.map((s) => [s.key, s.value])),
   };
 }

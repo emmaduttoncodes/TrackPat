@@ -25,6 +25,14 @@ db.version(2).stores({
   });
 });
 
+// v3: add settings table
+db.version(3).stores({
+  days: 'date',
+  medSchedules: 'id',
+  medEvents: '[date+scheduleId], date',
+  settings: 'key',
+});
+
 // ─── Default medication schedules ─────────────────────────────────────
 const defaultMedSchedules = [
   { id: 'm1', name: 'Tacrolimus', doseMg: '2', time: '08:00', group: 'Morning', active: true, foodInstruction: 'before' },
@@ -94,6 +102,16 @@ export async function saveMedEvent(event) {
 
 export async function deleteMedEvent(date, scheduleId) {
   await db.medEvents.delete([date, scheduleId]);
+}
+
+// ─── Settings helpers ────────────────────────────────────────────────
+export async function loadSetting(key) {
+  const row = await db.settings.get(key);
+  return row ? row.value : null;
+}
+
+export async function saveSetting(key, value) {
+  await db.settings.put({ key, value });
 }
 
 // ─── Export all data as JSON ──────────────────────────────────────────

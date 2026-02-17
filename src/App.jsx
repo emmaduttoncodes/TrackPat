@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  db, emptyDay, loadDay, saveDay, loadSchedules, saveSchedule,
+  db, emptyDay, loadDay, saveDay, loadAllDays, loadSchedules, saveSchedule,
   deleteSchedule, loadMedEvents, saveMedEvent, deleteMedEvent, exportAllData,
+  loadSetting, saveSetting,
 } from './db';
 
 // ─── Helpers ───────────────────────────────────────────────────────────
@@ -304,6 +305,305 @@ function SymptomsTile({ data, onClick }) {
         <span style={{ ...tileLabel, color: hasAny ? '#c9914a' : '#8fae8b', margin: 0 }}>{hasAny ? 'Symptoms' : 'No symptoms'}</span>
         {hasAny && <span style={{ fontSize: 12, color: '#c9914a', marginLeft: 'auto', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60%' }}>{summaryText}</span>}
         {!hasAny && <span style={{ color: '#ccc', fontSize: 16, marginLeft: 'auto' }}>›</span>}
+      </div>
+    </div>
+  );
+}
+
+// ─── Bottom Navigation ────────────────────────────────────────────────
+function BottomNav({ page, setPage }) {
+  const items = [
+    {
+      id: 'overview', label: 'Overview',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
+        </svg>
+      ),
+    },
+    {
+      id: 'trends', label: 'Trends',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+      ),
+    },
+    {
+      id: 'profile', label: 'Profile',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+        </svg>
+      ),
+    },
+  ];
+
+  return (
+    <div
+      style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40,
+        background: '#e8f0e8', borderTop: '1px solid rgba(0,0,0,0.04)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
+    >
+      <div style={{ display: 'flex', height: 56 }}>
+        {items.map((item) => {
+          const active = page === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setPage(item.id)}
+              style={{
+                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                gap: 2, background: 'none', border: 'none', cursor: 'pointer', position: 'relative',
+                color: active ? '#7a9b7e' : '#b5b5b5', fontFamily: "'DM Sans', sans-serif",
+                fontSize: 11, fontWeight: active ? 600 : 500,
+              }}
+            >
+              {active && (
+                <div style={{
+                  position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+                  width: 20, height: 3, borderRadius: 2, background: '#7a9b7e',
+                }} />
+              )}
+              <div style={{ marginTop: 2 }}>{item.icon}</div>
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Placeholder Pages ────────────────────────────────────────────────
+function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
+  if (!data.length) {
+    return (
+      <div style={{ ...tile, padding: '16px 18px', marginBottom: 12 }}>
+        <div style={{ ...tileLabel, color, marginBottom: 8 }}>{title}</div>
+        <div style={{ fontSize: 13, color: '#ccc', textAlign: 'center', padding: '20px 0' }}>No data yet</div>
+      </div>
+    );
+  }
+
+  const lo = yMin != null ? yMin : Math.min(...data.map((d) => d.y));
+  const hi = yMax != null ? yMax : Math.max(...data.map((d) => d.y));
+  const range = hi - lo || 1;
+  const W = 300;
+  const H = 120;
+  const padL = 32;
+  const padR = 8;
+  const padT = 8;
+  const padB = 24;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+
+  const points = data.map((d, i) => ({
+    ...d,
+    px: padL + (data.length === 1 ? chartW / 2 : (i / (data.length - 1)) * chartW),
+    py: padT + chartH - ((d.y - lo) / range) * chartH,
+  }));
+
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.px},${p.py}`).join(' ');
+  const areaPath = `${linePath} L${points[points.length - 1].px},${padT + chartH} L${points[0].px},${padT + chartH} Z`;
+
+  const yLabels = [lo, lo + range / 2, hi];
+  const labelIndices = data.length <= 7
+    ? data.map((_, i) => i)
+    : [0, Math.floor((data.length - 1) / 2), data.length - 1];
+
+  return (
+    <div style={{ ...tile, padding: '16px 18px', marginBottom: 12 }}>
+      <div style={{ ...tileLabel, color, marginBottom: 8 }}>{title}</div>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }}>
+        {/* Y grid lines and labels */}
+        {yLabels.map((v, i) => {
+          const y = padT + chartH - ((v - lo) / range) * chartH;
+          return (
+            <g key={i}>
+              <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#eeecea" strokeWidth="1" />
+              <text x={padL - 4} y={y + 3} textAnchor="end" fill="#bbb" fontSize="8" fontFamily="DM Sans, sans-serif">
+                {formatY ? formatY(v) : Math.round(v)}
+              </text>
+            </g>
+          );
+        })}
+        {/* Area fill */}
+        <path d={areaPath} fill={color} opacity="0.08" />
+        {/* Line */}
+        <path d={linePath} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Dots */}
+        {points.map((p, i) => (
+          <circle key={i} cx={p.px} cy={p.py} r="3" fill="#fff" stroke={color} strokeWidth="2" />
+        ))}
+        {/* X labels */}
+        {labelIndices.map((i) => {
+          const p = points[i];
+          if (!p) return null;
+          const parts = p.label.split('-');
+          const lbl = `${parseInt(parts[2])}/${parseInt(parts[1])}`;
+          return (
+            <text key={i} x={p.px} y={H - 4} textAnchor="middle" fill="#bbb" fontSize="8" fontFamily="DM Sans, sans-serif">
+              {lbl}
+            </text>
+          );
+        })}
+      </svg>
+      {/* Latest value */}
+      <div style={{ fontSize: 12, color: '#999', marginTop: 4, textAlign: 'right' }}>
+        Latest: <span style={{ color: '#3d3d3d', fontWeight: 600 }}>{formatY ? formatY(data[data.length - 1].y) : data[data.length - 1].y}{unit ? ` ${unit}` : ''}</span>
+      </div>
+    </div>
+  );
+}
+
+const moodEmojis = { 1: '😞', 2: '🙁', 3: '😐', 4: '🙂', 5: '😄' };
+
+function TrendsPage() {
+  const [allDays, setAllDays] = useState(null);
+
+  useEffect(() => {
+    loadAllDays().then(setAllDays);
+  }, []);
+
+  if (!allDays) {
+    return (
+      <div style={{ paddingTop: 'env(safe-area-inset-top)', background: '#f7f6f2', minHeight: '100vh' }}>
+        <div style={{ padding: '24px 20px' }}>
+          <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: '#3d3d3d' }}>Trends</h2>
+          <div style={{ color: '#8fae8b', textAlign: 'center', padding: 40 }}>Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  const sorted = Object.entries(allDays).sort(([a], [b]) => a.localeCompare(b));
+
+  const painData = sorted
+    .flatMap(([date, d]) =>
+      (d.pain || [])
+        .filter((e) => Number(e.level) > 0)
+        .map((e) => ({ label: date, y: Number(e.level) }))
+    );
+
+  const activityData = sorted
+    .filter(([, d]) => d.activity && d.activity.walkMinutes && d.activity.walkMinutes.length > 0)
+    .map(([date, d]) => ({
+      label: date,
+      y: d.activity.walkMinutes.reduce((s, w) => s + (Number(w.minutes) || 0), 0),
+    }))
+    .filter((d) => d.y > 0);
+
+  const weightData = sorted
+    .filter(([, d]) => d.vitals && d.vitals.weightKg && Number(d.vitals.weightKg) > 0)
+    .map(([date, d]) => ({ label: date, y: Number(d.vitals.weightKg) }));
+
+  const moodData = sorted
+    .filter(([, d]) => d.mood && d.mood.value != null)
+    .map(([date, d]) => ({ label: date, y: d.mood.value }));
+
+  const hasAny = painData.length || activityData.length || weightData.length || moodData.length;
+
+  return (
+    <div style={{ paddingTop: 'env(safe-area-inset-top)', background: '#f7f6f2', minHeight: '100vh' }}>
+      <div style={{ padding: '24px 20px' }}>
+        <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: '#3d3d3d', marginBottom: 20 }}>Trends</h2>
+
+        {!hasAny && (
+          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#b5b5b5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 12px' }}>
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+            <p style={{ fontSize: 14, color: '#999', maxWidth: 260, margin: '0 auto', lineHeight: 1.5 }}>Start logging data on the Overview tab and your trends will appear here.</p>
+          </div>
+        )}
+
+        <MiniChart title="Pain" color="#d4a574" data={painData} unit="/10" yMin={0} yMax={10} />
+        <MiniChart title="Activity" color="#7ab8a8" data={activityData} unit="min" yMin={0} />
+        <MiniChart title="Weight" color="#8b9cc7" data={weightData} unit="kg" />
+        <MiniChart title="Mood" color="#b8a0c9" data={moodData} yMin={1} yMax={5}
+          formatY={(v) => moodEmojis[Math.round(v)] || Math.round(v)} />
+      </div>
+    </div>
+  );
+}
+
+function ProfilePage({ onExport }) {
+  const [transplantDate, setTransplantDate] = useState('');
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    loadSetting('transplantDate').then((v) => {
+      if (v) setTransplantDate(v);
+      setLoaded(true);
+    });
+  }, []);
+
+  const handleDateChange = (value) => {
+    setTransplantDate(value);
+    saveSetting('transplantDate', value);
+  };
+
+  const daysSince = () => {
+    if (!transplantDate) return null;
+    const tx = new Date(transplantDate + 'T12:00:00');
+    const now = new Date();
+    now.setHours(12, 0, 0, 0);
+    return Math.floor((now - tx) / 86400000);
+  };
+
+  const days = daysSince();
+
+  if (!loaded) return null;
+
+  return (
+    <div style={{ paddingTop: 'env(safe-area-inset-top)', background: '#f7f6f2', minHeight: '100vh' }}>
+      <div style={{ padding: '24px 20px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#b5b5b5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 8px' }}>
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+          </svg>
+          <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: '#3d3d3d', margin: 0 }}>Profile</h2>
+        </div>
+
+        {/* Days since transplant display */}
+        {days != null && days >= 0 && (
+          <div style={{
+            background: 'linear-gradient(135deg, #8fae8b 0%, #a3c4a0 40%, #90c5b0 100%)',
+            borderRadius: 20, padding: '24px 20px', marginBottom: 20, textAlign: 'center',
+          }}>
+            <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 44, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{days}</div>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', marginTop: 6, fontWeight: 500 }}>
+              {days === 1 ? 'day' : 'days'} since transplant 🎉
+            </div>
+          </div>
+        )}
+
+        {/* Transplant date input */}
+        <div style={{
+          background: '#fff', borderRadius: 16, padding: '16px', marginBottom: 16,
+          boxShadow: '0 1px 4px rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.03)',
+        }}>
+          <label style={{ fontSize: 13, fontWeight: 500, color: '#7a7a7a', marginBottom: 6, display: 'block', fontFamily: "'DM Sans', sans-serif" }}>
+            Transplant Date
+          </label>
+          <input
+            type="date"
+            value={transplantDate}
+            onChange={(e) => handleDateChange(e.target.value)}
+            style={{
+              width: '100%', padding: '10px 14px', borderRadius: 12, border: '1.5px solid #e0ddd6',
+              background: '#fff', fontSize: 15, color: '#3d3d3d', outline: 'none', fontFamily: "'DM Sans', sans-serif",
+            }}
+          />
+        </div>
+
+        {/* Export */}
+        <button onClick={onExport} className="w-full py-3 rounded-2xl text-sm" style={{ background: '#e8e6e1', color: '#7a7a7a' }}>
+          Download Backup
+        </button>
       </div>
     </div>
   );
@@ -632,6 +932,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
 
 // ─── Main App ──────────────────────────────────────────────────────────
 export default function App() {
+  const [page, setPage] = useState('overview');
   const [currentDate, setCurrentDate] = useState(todayStr());
   const [tab, setTab] = useState('overview');
   const [dayData, setDayData] = useState(emptyDay());
@@ -640,6 +941,9 @@ export default function App() {
   const [medEvents, setMedEvents] = useState([]);
   const [activeSheet, setActiveSheet] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Scroll to top when switching pages
+  useEffect(() => { window.scrollTo(0, 0); }, [page]);
 
   // Load data when date changes
   useEffect(() => {
@@ -707,90 +1011,95 @@ export default function App() {
 
   return (
     <div className="min-h-screen" style={{ background: '#f7f6f2', fontFamily: "'DM Sans', sans-serif" }}>
-      {/* Header */}
-      <div className="px-5 pt-6 pb-5" style={{ background: 'linear-gradient(135deg, #8fae8b 0%, #a3c4a0 40%, #90c5b0 100%)' }}>
-        <div className="flex items-center justify-between mb-1">
-          <button onClick={() => setCurrentDate(addDays(currentDate, -1))} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.2)' }}>
-            <span className="text-white text-lg">‹</span>
-          </button>
-          <div className="text-center">
-            <div className="text-xl font-bold text-white" style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}>{formatDate(currentDate)}</div>
-            <div className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.85)' }}>{getEncouragement(currentDate)}</div>
-          </div>
-          <button
-            onClick={() => canGoForward && setCurrentDate(addDays(currentDate, 1))}
-            className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{ background: canGoForward ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)', cursor: canGoForward ? 'pointer' : 'default' }}
-          >
-            <span style={{ color: canGoForward ? '#fff' : 'rgba(255,255,255,0.3)' }} className="text-lg">›</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Segmented Control */}
-      <div className="px-5 -mt-3">
-        <div className="flex rounded-2xl p-1" style={{ background: '#e8e6e1' }}>
-          {['overview', 'medication'].map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
-              style={{ background: tab === t ? '#fff' : 'transparent', color: tab === t ? '#3d3d3d' : '#999', boxShadow: tab === t ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}
-            >{t === 'overview' ? 'Overview' : 'Medication'}</button>
-          ))}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="px-5 py-4">
-        {tab === 'overview' ? (
-          <div className="flex flex-col gap-3">
-            {isDayEmpty && (
-              <div className="text-center py-2 px-4 rounded-2xl" style={{ background: 'rgba(143,174,139,0.08)', color: '#8fae8b', fontSize: 13 }}>
-                Tap any card to start recording
+      {page === 'overview' && (
+        <>
+          {/* Header */}
+          <div className="px-5 pt-6 pb-5" style={{ background: 'linear-gradient(135deg, #8fae8b 0%, #a3c4a0 40%, #90c5b0 100%)' }}>
+            <div className="flex items-center justify-between mb-1">
+              <button onClick={() => setCurrentDate(addDays(currentDate, -1))} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                <span className="text-white text-lg">‹</span>
+              </button>
+              <div className="text-center">
+                <div className="text-xl font-bold text-white" style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}>{formatDate(currentDate)}</div>
+                <div className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.85)' }}>{getEncouragement(currentDate)}</div>
               </div>
-            )}
-            <VitalsTile data={dayData.vitals} onClick={() => setActiveSheet('vitals')} />
-            <div className="grid grid-cols-2 gap-3">
-              <MoodTile data={dayData.mood} onClick={() => setActiveSheet('mood')} />
-              <SleepTile data={dayData.sleep} onClick={() => setActiveSheet('sleep')} />
+              <button
+                onClick={() => canGoForward && setCurrentDate(addDays(currentDate, 1))}
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ background: canGoForward ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)', cursor: canGoForward ? 'pointer' : 'default' }}
+              >
+                <span style={{ color: canGoForward ? '#fff' : 'rgba(255,255,255,0.3)' }} className="text-lg">›</span>
+              </button>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <PainTile data={dayData.pain} onClick={() => setActiveSheet('pain')} />
-              <ActivityTile data={dayData.activity} onClick={() => setActiveSheet('activity')} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <SmallTile label="Appetite" icon="🍽" color="#c9a87a"
-                value={dayData.appetite.thumb === 'up' ? '👍' : dayData.appetite.thumb === 'down' ? '👎' : null}
-                sub={dayData.appetite.note || null}
-                empty={!dayData.appetite.thumb && !(dayData.appetite.note && dayData.appetite.note.trim())}
-                onClick={() => setActiveSheet('appetite')} />
-              <SmallTile label="Bowels" icon="🚽" color="#8fb8b0"
-                value={dayData.bowel.hadBm ? '✓' : null}
-                sub={dayData.bowel.hadBm ? (dayData.bowel.note ? dayData.bowel.note : 'Yes') : (dayData.bowel.note ? dayData.bowel.note : null)}
-                empty={!dayData.bowel.hadBm && !(dayData.bowel.note && dayData.bowel.note.trim())}
-                onClick={() => setActiveSheet('bowel')} />
-            </div>
-            <SymptomsTile data={dayData.symptoms} onClick={() => setActiveSheet('symptoms')} />
-
-            {/* Export backup */}
-            <button onClick={handleExport} className="w-full mt-2 py-3 rounded-2xl text-sm" style={{ background: '#e8e6e1', color: '#7a7a7a' }}>
-              Download Backup
-            </button>
           </div>
-        ) : (
-          <MedicationTab schedules={schedules} setSchedules={setSchedules} events={medEvents} setEvents={setMedEvents} currentDate={currentDate} />
-        )}
-      </div>
 
-      {/* Bottom Sheets */}
-      {activeSheet && sheetConfigs[activeSheet] && (
-        <BottomSheet open={true} onClose={() => setActiveSheet(null)} title={sheetConfigs[activeSheet].title}>
-          {sheetConfigs[activeSheet].content}
-        </BottomSheet>
+          {/* Segmented Control */}
+          <div className="px-5 -mt-3">
+            <div className="flex rounded-2xl p-1" style={{ background: '#e8e6e1' }}>
+              {['overview', 'medication'].map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                  style={{ background: tab === t ? '#fff' : 'transparent', color: tab === t ? '#3d3d3d' : '#999', boxShadow: tab === t ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}
+                >{t === 'overview' ? 'Overview' : 'Medication'}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="px-5 py-4">
+            {tab === 'overview' ? (
+              <div className="flex flex-col gap-3">
+                {isDayEmpty && (
+                  <div className="text-center py-2 px-4 rounded-2xl" style={{ background: 'rgba(143,174,139,0.08)', color: '#8fae8b', fontSize: 13 }}>
+                    Tap any card to start recording
+                  </div>
+                )}
+                <VitalsTile data={dayData.vitals} onClick={() => setActiveSheet('vitals')} />
+                <div className="grid grid-cols-2 gap-3">
+                  <MoodTile data={dayData.mood} onClick={() => setActiveSheet('mood')} />
+                  <SleepTile data={dayData.sleep} onClick={() => setActiveSheet('sleep')} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <PainTile data={dayData.pain} onClick={() => setActiveSheet('pain')} />
+                  <ActivityTile data={dayData.activity} onClick={() => setActiveSheet('activity')} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <SmallTile label="Appetite" icon="🍽" color="#c9a87a"
+                    value={dayData.appetite.thumb === 'up' ? '👍' : dayData.appetite.thumb === 'down' ? '👎' : null}
+                    sub={dayData.appetite.note || null}
+                    empty={!dayData.appetite.thumb && !(dayData.appetite.note && dayData.appetite.note.trim())}
+                    onClick={() => setActiveSheet('appetite')} />
+                  <SmallTile label="Bowels" icon="🚽" color="#8fb8b0"
+                    value={dayData.bowel.hadBm ? '✓' : null}
+                    sub={dayData.bowel.hadBm ? (dayData.bowel.note ? dayData.bowel.note : 'Yes') : (dayData.bowel.note ? dayData.bowel.note : null)}
+                    empty={!dayData.bowel.hadBm && !(dayData.bowel.note && dayData.bowel.note.trim())}
+                    onClick={() => setActiveSheet('bowel')} />
+                </div>
+                <SymptomsTile data={dayData.symptoms} onClick={() => setActiveSheet('symptoms')} />
+              </div>
+            ) : (
+              <MedicationTab schedules={schedules} setSchedules={setSchedules} events={medEvents} setEvents={setMedEvents} currentDate={currentDate} />
+            )}
+          </div>
+
+          {/* Bottom Sheets */}
+          {activeSheet && sheetConfigs[activeSheet] && (
+            <BottomSheet open={true} onClose={() => setActiveSheet(null)} title={sheetConfigs[activeSheet].title}>
+              {sheetConfigs[activeSheet].content}
+            </BottomSheet>
+          )}
+        </>
       )}
 
-      <div className="h-8" />
+      {page === 'trends' && <TrendsPage />}
+      {page === 'profile' && <ProfilePage onExport={handleExport} />}
+
+      {/* Spacer for bottom nav */}
+      <div style={{ height: 72 }} />
+
+      <BottomNav page={page} setPage={setPage} />
     </div>
   );
 }

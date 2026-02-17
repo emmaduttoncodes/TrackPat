@@ -498,16 +498,42 @@ function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
     return closest;
   };
 
+  // Delay activation so quick swipes still work for day navigation
+  const holdTimer = useRef(null);
+  const pendingPointer = useRef(null);
+
   const handlePointerDown = (e) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
-    setActiveIdx(getNearestIdx(e.clientX));
+    pendingPointer.current = { id: e.pointerId, target: e.currentTarget, x: e.clientX };
+    holdTimer.current = setTimeout(() => {
+      const pp = pendingPointer.current;
+      if (pp && pp.target) {
+        pp.target.setPointerCapture(pp.id);
+        setActiveIdx(getNearestIdx(pp.x));
+      }
+    }, 150);
   };
   const handlePointerMove = (e) => {
-    if (activeIdx == null) return;
-    setActiveIdx(getNearestIdx(e.clientX));
+    if (activeIdx != null) {
+      setActiveIdx(getNearestIdx(e.clientX));
+    } else if (pendingPointer.current) {
+      // If finger moves significantly before hold activates, cancel
+      const dx = Math.abs(e.clientX - pendingPointer.current.x);
+      if (dx > 10) {
+        clearTimeout(holdTimer.current);
+        pendingPointer.current = null;
+      }
+    }
   };
-  const handlePointerUp = () => setActiveIdx(null);
-  const handlePointerCancel = () => setActiveIdx(null);
+  const handlePointerUp = () => {
+    clearTimeout(holdTimer.current);
+    pendingPointer.current = null;
+    setActiveIdx(null);
+  };
+  const handlePointerCancel = () => {
+    clearTimeout(holdTimer.current);
+    pendingPointer.current = null;
+    setActiveIdx(null);
+  };
 
   const ap = activeIdx != null ? points[activeIdx] : null;
 
@@ -517,7 +543,7 @@ function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
-        style={{ width: '100%', height: 'auto', touchAction: 'none' }}
+        style={{ width: '100%', height: 'auto', touchAction: activeIdx != null ? 'none' : 'pan-x' }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}

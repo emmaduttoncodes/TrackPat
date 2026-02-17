@@ -8,14 +8,31 @@ db.version(1).stores({
   medEvents: '[date+scheduleId], date',  // Compound key + date index
 });
 
+// v2: add foodInstruction to existing medication schedules
+db.version(2).stores({
+  days: 'date',
+  medSchedules: 'id',
+  medEvents: '[date+scheduleId], date',
+}).upgrade((tx) => {
+  const foodDefaults = {
+    Tacrolimus: 'before', Mycophenolate: 'before',
+    Prednisolone: 'with', Omeprazole: 'before',
+  };
+  return tx.table('medSchedules').toCollection().modify((med) => {
+    if (!med.foodInstruction) {
+      med.foodInstruction = foodDefaults[med.name] || '';
+    }
+  });
+});
+
 // ─── Default medication schedules ─────────────────────────────────────
 const defaultMedSchedules = [
-  { id: 'm1', name: 'Tacrolimus', doseMg: '2', time: '08:00', group: 'Morning', active: true },
-  { id: 'm2', name: 'Mycophenolate', doseMg: '500', time: '08:00', group: 'Morning', active: true },
-  { id: 'm3', name: 'Prednisolone', doseMg: '20', time: '08:00', group: 'Morning', active: true },
-  { id: 'm4', name: 'Omeprazole', doseMg: '20', time: '12:00', group: 'Afternoon', active: true },
-  { id: 'm5', name: 'Tacrolimus', doseMg: '2', time: '20:00', group: 'Evening', active: true },
-  { id: 'm6', name: 'Mycophenolate', doseMg: '500', time: '20:00', group: 'Evening', active: true },
+  { id: 'm1', name: 'Tacrolimus', doseMg: '2', time: '08:00', group: 'Morning', active: true, foodInstruction: 'before' },
+  { id: 'm2', name: 'Mycophenolate', doseMg: '500', time: '08:00', group: 'Morning', active: true, foodInstruction: 'before' },
+  { id: 'm3', name: 'Prednisolone', doseMg: '20', time: '08:00', group: 'Morning', active: true, foodInstruction: 'with' },
+  { id: 'm4', name: 'Omeprazole', doseMg: '20', time: '12:00', group: 'Afternoon', active: true, foodInstruction: 'before' },
+  { id: 'm5', name: 'Tacrolimus', doseMg: '2', time: '20:00', group: 'Evening', active: true, foodInstruction: 'before' },
+  { id: 'm6', name: 'Mycophenolate', doseMg: '500', time: '20:00', group: 'Evening', active: true, foodInstruction: 'before' },
 ];
 
 // Seed default meds on first run

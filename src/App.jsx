@@ -455,7 +455,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
   const [editMode, setEditMode] = useState(false);
   const [editingMed, setEditingMed] = useState(null);
   const [addingMed, setAddingMed] = useState(false);
-  const [newMed, setNewMed] = useState({ name: '', doseMg: '', time: '08:00', group: 'Morning', active: true });
+  const [newMed, setNewMed] = useState({ name: '', doseMg: '', time: '08:00', group: 'Morning', active: true, foodInstruction: '' });
   const [takenSheet, setTakenSheet] = useState(null);
 
   const groups = ['Morning', 'Afternoon', 'Evening'];
@@ -506,7 +506,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
     await saveSchedule({ ...newMed, id: uid() });
     const updated = await loadSchedules();
     setSchedules(updated);
-    setNewMed({ name: '', doseMg: '', time: '08:00', group: 'Morning', active: true });
+    setNewMed({ name: '', doseMg: '', time: '08:00', group: 'Morning', active: true, foodInstruction: '' });
     setAddingMed(false);
   };
 
@@ -543,7 +543,11 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
                     )}
                     <div className="flex-1 min-w-0">
                       <div style={{ fontSize: 15, color: '#3d3d3d', fontWeight: 500 }}>{med.name}</div>
-                      <div style={{ fontSize: 12, color: '#999' }}>{med.doseMg} mg · {med.time}</div>
+                      <div style={{ fontSize: 12, color: '#999' }}>
+                        {med.doseMg} mg · {med.time}
+                        {med.foodInstruction === 'before' && <span style={{ color: '#c9a87a' }}> · Before food</span>}
+                        {med.foodInstruction === 'with' && <span style={{ color: '#8b9cc7' }}> · With food</span>}
+                      </div>
                     </div>
                     {ev && !editMode && <div style={{ fontSize: 12, color: '#7fb685' }}>✓ Taken {ev.takenAt}</div>}
                     {editMode && <span style={{ color: '#ccc', fontSize: 18 }}>›</span>}
@@ -572,6 +576,13 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
                 ))}
               </div>
             </Field>
+            <Field label="Food Instruction">
+              <div className="flex gap-2">
+                {[{ value: '', label: 'None' }, { value: 'before', label: 'Before food' }, { value: 'with', label: 'With food' }].map((opt) => (
+                  <button key={opt.value} onClick={() => setEditingMed({ ...editingMed, foodInstruction: opt.value })} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: (editingMed.foodInstruction || '') === opt.value ? '#7a9b7e' : '#f0eeea', color: (editingMed.foodInstruction || '') === opt.value ? '#fff' : '#6b6b6b' }}>{opt.label}</button>
+                ))}
+              </div>
+            </Field>
             <button onClick={() => deleteMed(editingMed.id)} className="w-full mt-4 py-3 rounded-2xl text-sm" style={{ background: '#fce8e8', color: '#c97070' }}>Delete Medication</button>
           </>
         )}
@@ -585,6 +596,13 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
           <div className="flex gap-2">
             {groups.map((g) => (
               <button key={g} onClick={() => setNewMed({ ...newMed, group: g })} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: newMed.group === g ? '#7a9b7e' : '#f0eeea', color: newMed.group === g ? '#fff' : '#6b6b6b' }}>{g}</button>
+            ))}
+          </div>
+        </Field>
+        <Field label="Food Instruction">
+          <div className="flex gap-2">
+            {[{ value: '', label: 'None' }, { value: 'before', label: 'Before food' }, { value: 'with', label: 'With food' }].map((opt) => (
+              <button key={opt.value} onClick={() => setNewMed({ ...newMed, foodInstruction: opt.value })} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: newMed.foodInstruction === opt.value ? '#7a9b7e' : '#f0eeea', color: newMed.foodInstruction === opt.value ? '#fff' : '#6b6b6b' }}>{opt.label}</button>
             ))}
           </div>
         </Field>

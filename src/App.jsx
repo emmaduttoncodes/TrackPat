@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { LayoutGrid, Activity, User, Settings } from 'lucide-react';
 import {
   db, emptyDay, loadDay, saveDay, loadAllDays, loadSchedules, saveSchedule,
   loadMedEvents, saveMedEvent, deleteMedEvent, exportAllData,
@@ -402,27 +403,15 @@ function BottomNav({ page, setPage }) {
   const items = [
     {
       id: 'overview', label: 'Overview',
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
-        </svg>
-      ),
+      icon: <LayoutGrid size={22} />,
     },
     {
       id: 'trends', label: 'Trends',
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-        </svg>
-      ),
+      icon: <Activity size={22} />,
     },
     {
       id: 'profile', label: 'Profile',
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-        </svg>
-      ),
+      icon: <User size={22} />,
     },
   ];
 
@@ -952,9 +941,7 @@ function TrendsPage() {
 
         {!hasAny && (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#b5b5b5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 12px' }}>
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-            </svg>
+            <Activity size={48} stroke="#b5b5b5" strokeWidth={1.5} style={{ margin: '0 auto 12px' }} />
             <p style={{ fontSize: 14, color: ds.textLight, maxWidth: 260, margin: '0 auto', lineHeight: 1.5 }}>Start logging data on the Overview tab and your trends will appear here.</p>
           </div>
         )}
@@ -1182,10 +1169,75 @@ function FoodSafetyView({ transplantDate, onClose }) {
   );
 }
 
-function ClinicAppointmentDetail({ appointment, onSave, onDelete, onClose }) {
+function ClinicAppointmentDetail({ appointment, onSave, onDelete, onClose, allAppointments, allDays, patientName, transplantDate }) {
   const [date, setDate] = useState(appointment.date);
   const [questions, setQuestions] = useState(appointment.questions);
   const [notes, setNotes] = useState(appointment.notes);
+
+  const handleExportReport = () => {
+    const endDate = date || todayStr();
+    // Find the most recent previous appointment by date
+    const previousDates = (allAppointments || [])
+      .filter(a => a.id !== appointment.id && a.date && a.date < endDate)
+      .map(a => a.date)
+      .sort();
+    const startDate = previousDates.length > 0
+      ? previousDates[previousDates.length - 1]
+      : transplantDate || addDays(endDate, -30);
+
+    const filteredDays = {};
+    Object.entries(allDays || {}).forEach(([d, v]) => {
+      if (d >= startDate && d <= endDate) filteredDays[d] = v;
+    });
+    const sorted = Object.entries(filteredDays).sort(([a], [b]) => a.localeCompare(b));
+
+    const painData = sorted.flatMap(([d, v]) =>
+      (v.pain || []).filter(e => Number(e.level) > 0).map(e => ({ label: d, y: Number(e.level) }))
+    );
+    const activityData = sorted
+      .filter(([, v]) => v.activity && v.activity.walkMinutes && v.activity.walkMinutes.length > 0)
+      .map(([d, v]) => ({ label: d, y: v.activity.walkMinutes.reduce((s, w) => s + (Number(w.minutes) || 0), 0) }))
+      .filter(d => d.y > 0);
+    const weightData = sorted
+      .filter(([, v]) => v.vitals && v.vitals.weightKg && Number(v.vitals.weightKg) > 0)
+      .map(([d, v]) => ({ label: d, y: Number(v.vitals.weightKg) }));
+    const moodData = sorted
+      .filter(([, v]) => v.mood && v.mood.value != null)
+      .map(([d, v]) => ({ label: d, y: v.mood.value }));
+
+    const html = buildClinicianReport({
+      patientName: patientName || 'Patient',
+      transplantDate,
+      startDate,
+      endDate,
+      days: filteredDays,
+      painData,
+      activityData,
+      weightData,
+      moodData,
+    });
+
+    const w = window.open('', '_blank');
+    if (w) {
+      w.document.write(html);
+      w.document.close();
+      setTimeout(() => w.print(), 400);
+    } else {
+      alert('Pop-up blocked. Please allow pop-ups for this site to export the report.');
+    }
+  };
+
+  const exportDateRange = (() => {
+    const endDate = date || todayStr();
+    const previousDates = (allAppointments || [])
+      .filter(a => a.id !== appointment.id && a.date && a.date < endDate)
+      .map(a => a.date)
+      .sort();
+    const startDate = previousDates.length > 0
+      ? previousDates[previousDates.length - 1]
+      : transplantDate || addDays(endDate, -30);
+    return { startDate, endDate };
+  })();
 
   const save = () => {
     onSave({ ...appointment, date, questions, notes });
@@ -1297,12 +1349,29 @@ function ClinicAppointmentDetail({ appointment, onSave, onDelete, onClose }) {
             style={{ ...inputStyle, resize: 'none', overflow: 'hidden' }}
           />
         </div>
+
+        {/* Export report */}
+        {allDays && (
+          <div style={{ marginTop: 8 }}>
+            <button
+              onClick={handleExportReport}
+              style={{
+                width: '100%', padding: '16px', borderRadius: ds.radiusMd, border: 'none',
+                background: ds.green, color: '#fff', fontSize: 16, fontWeight: 600,
+                cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+              }}
+            >Export report for clinician</button>
+            <p style={{ fontSize: 12, color: ds.textLight, textAlign: 'center', marginTop: 8, fontFamily: "'DM Sans', sans-serif" }}>
+              Covers {formatDate(exportDateRange.startDate)} – {formatDate(exportDateRange.endDate)}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function ClinicAppointmentsView({ appointments, onSave, onClose }) {
+function ClinicAppointmentsView({ appointments, onSave, onClose, allDays, patientName, transplantDate }) {
   const [selectedAppt, setSelectedAppt] = useState(null);
 
   const sorted = [...appointments].sort((a, b) => {
@@ -1340,6 +1409,10 @@ function ClinicAppointmentsView({ appointments, onSave, onClose }) {
         onSave={saveAppointment}
         onDelete={deleteAppointment}
         onClose={() => setSelectedAppt(null)}
+        allAppointments={appointments}
+        allDays={allDays}
+        patientName={patientName}
+        transplantDate={transplantDate}
       />
     );
   }
@@ -1427,12 +1500,117 @@ function ClinicAppointmentsView({ appointments, onSave, onClose }) {
   );
 }
 
+function SettingsView({ transplantDate, onDateChange, onExport, onImport, fileInputRef, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50" style={{ background: ds.bg, overflowY: 'auto' }}>
+      <div style={{ padding: '24px 20px 120px', paddingTop: 'calc(24px + env(safe-area-inset-top))' }}>
+        {/* Header */}
+        <div className="flex items-center gap-3" style={{ marginBottom: 20 }}>
+          <button
+            onClick={onClose}
+            className="flex items-center justify-center"
+            style={{
+              width: 34, height: 34, borderRadius: '50%',
+              background: '#e8e6e1', color: ds.textMuted, border: 'none',
+              fontSize: 18, cursor: 'pointer', flexShrink: 0,
+            }}
+          >‹</button>
+          <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: ds.text, margin: 0 }}>
+            Settings
+          </h2>
+        </div>
+
+        {/* Settings */}
+        <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, color: '#a5a5a5', marginBottom: 8, paddingLeft: 4, fontFamily: "'DM Sans', sans-serif" }}>
+          Settings
+        </div>
+        <div style={{
+          background: ds.card, borderRadius: ds.radiusLg, marginBottom: 16, overflow: 'hidden',
+          boxShadow: ds.cardShadow, border: ds.cardBorder,
+        }}>
+          <div style={{ padding: '14px 16px' }}>
+            <label style={{ ...labelStyle, marginBottom: 6 }}>
+              Transplant date
+            </label>
+            <input
+              type="date"
+              value={transplantDate}
+              onChange={(e) => onDateChange(e.target.value)}
+              style={{
+                ...inputStyle,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Your data */}
+        <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, color: '#a5a5a5', marginBottom: 8, paddingLeft: 4, fontFamily: "'DM Sans', sans-serif" }}>
+          Your data
+        </div>
+        <div style={{
+          background: ds.card, borderRadius: ds.radiusLg, marginBottom: 16, overflow: 'hidden',
+          boxShadow: ds.cardShadow, border: ds.cardBorder,
+        }}>
+          <button onClick={onExport} className="w-full text-left" style={{ padding: '16px', fontSize: 15, color: ds.text, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
+            Backup data
+            <span style={{ float: 'right', color: ds.textPlaceholder }}>›</span>
+          </button>
+          <div style={{ borderTop: `1px solid ${ds.divider}` }}>
+            <button onClick={() => fileInputRef.current?.click()} className="w-full text-left" style={{ padding: '16px', fontSize: 15, color: ds.text, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
+              Restore from backup
+              <span style={{ float: 'right', color: ds.textPlaceholder }}>›</span>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              style={{ display: 'none' }}
+              onChange={(e) => { if (e.target.files[0]) onImport(e.target.files[0]); e.target.value = ''; }}
+            />
+          </div>
+          <div style={{ padding: '0 16px 14px', fontSize: 12, color: ds.textMuted, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif" }}>
+            Your data is stored only on this device — it never leaves your phone and no one else can access it. However, it can be lost if you clear your browser data, delete the app, or switch devices. We recommend a monthly backup.
+          </div>
+        </div>
+
+        {/* About */}
+        <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, color: '#a5a5a5', marginBottom: 8, paddingLeft: 4, fontFamily: "'DM Sans', sans-serif" }}>
+          About
+        </div>
+        <div style={{
+          background: ds.card, borderRadius: ds.radiusLg, padding: '16px 18px', marginBottom: 16,
+          boxShadow: ds.cardShadow, border: ds.cardBorder,
+        }}>
+          <p style={{ fontSize: 13, color: ds.text, lineHeight: 1.6, margin: '0 0 12px', fontFamily: "'DM Sans', sans-serif" }}>
+            TrackPat was made with love to support my partner after his liver transplant. It started as a simple way to keep on top of daily recovery — and grew into something we hope might help others too.
+          </p>
+          <p style={{ fontSize: 12, color: ds.textMuted, lineHeight: 1.6, margin: '0 0 12px', fontFamily: "'DM Sans', sans-serif" }}>
+            This app is designed to support your recovery journey, not to replace medical advice. It is not a diagnostic tool — always follow your transplant team's guidance and contact them with any concerns.
+          </p>
+          <p style={{ fontSize: 12, color: ds.textMuted, lineHeight: 1.6, margin: 0, fontFamily: "'DM Sans', sans-serif" }}>
+            We'd love to hear from you — whether it's feedback, suggestions, or just to say hello.
+          </p>
+          <a
+            href="mailto:emma@emmadutton.dev"
+            style={{
+              display: 'block', marginTop: 12, padding: '12px', borderRadius: ds.radiusSm,
+              background: ds.greenLight, color: ds.green, fontSize: 14, fontWeight: 600,
+              textAlign: 'center', textDecoration: 'none', fontFamily: "'DM Sans', sans-serif",
+            }}
+          >Send feedback</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ProfilePage({ onExport, onImport, showToast }) {
   const [transplantDate, setTransplantDate] = useState('');
   const [name, setName] = useState('Friend');
   const [editingName, setEditingName] = useState(false);
   const [showFoodSafety, setShowFoodSafety] = useState(false);
   const [showClinicAppts, setShowClinicAppts] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [clinicAppts, setClinicAppts] = useState([]);
   const [allDays, setAllDays] = useState(null);
   const [loaded, setLoaded] = useState(false);
@@ -1538,16 +1716,26 @@ function ProfilePage({ onExport, onImport, showToast }) {
 
   return (
     <div style={{ paddingTop: 'env(safe-area-inset-top)', background: ds.bg, minHeight: '100vh' }}>
-      <div style={{ padding: '24px 20px' }}>
+      <div style={{ padding: '24px 20px', position: 'relative' }}>
+        {/* Settings cog */}
+        <button
+          onClick={() => setShowSettings(true)}
+          style={{
+            position: 'absolute', top: 24, right: 20, background: 'none', border: 'none',
+            cursor: 'pointer', padding: 4, zIndex: 1,
+          }}
+          aria-label="Settings"
+        >
+          <Settings size={20} stroke={ds.textMuted} strokeWidth={1.8} />
+        </button>
+
         {/* Greeting header */}
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div style={{
             width: 64, height: 64, borderRadius: '50%', margin: '0 auto 12px',
             background: ds.greenLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={ds.green} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-            </svg>
+            <User size={30} stroke={ds.green} strokeWidth={1.8} />
           </div>
           {editingName ? (
             <div className="flex items-center justify-center gap-2">
@@ -1661,86 +1849,6 @@ function ProfilePage({ onExport, onImport, showToast }) {
           <span style={{ color: ds.textPlaceholder, fontSize: 18 }}>›</span>
         </div>
 
-        {/* Settings */}
-        <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, color: '#a5a5a5', marginBottom: 8, paddingLeft: 4, fontFamily: "'DM Sans', sans-serif" }}>
-          Settings
-        </div>
-        <div style={{
-          background: ds.card, borderRadius: ds.radiusLg, marginBottom: 16, overflow: 'hidden',
-          boxShadow: ds.cardShadow, border: ds.cardBorder,
-        }}>
-          <div style={{ padding: '14px 16px' }}>
-            <label style={{ ...labelStyle, marginBottom: 6 }}>
-              Transplant date
-            </label>
-            <input
-              type="date"
-              value={transplantDate}
-              onChange={(e) => handleDateChange(e.target.value)}
-              style={{
-                ...inputStyle,
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Your data */}
-        <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, color: '#a5a5a5', marginBottom: 8, paddingLeft: 4, fontFamily: "'DM Sans', sans-serif" }}>
-          Your data
-        </div>
-        <div style={{
-          background: ds.card, borderRadius: ds.radiusLg, marginBottom: 16, overflow: 'hidden',
-          boxShadow: ds.cardShadow, border: ds.cardBorder,
-        }}>
-          <button onClick={onExport} className="w-full text-left" style={{ padding: '16px', fontSize: 15, color: ds.text, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
-            Backup data
-            <span style={{ float: 'right', color: ds.textPlaceholder }}>›</span>
-          </button>
-          <div style={{ borderTop: `1px solid ${ds.divider}` }}>
-            <button onClick={() => fileInputRef.current?.click()} className="w-full text-left" style={{ padding: '16px', fontSize: 15, color: ds.text, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
-              Restore from backup
-              <span style={{ float: 'right', color: ds.textPlaceholder }}>›</span>
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json"
-              style={{ display: 'none' }}
-              onChange={(e) => { if (e.target.files[0]) onImport(e.target.files[0]); e.target.value = ''; }}
-            />
-          </div>
-          <div style={{ padding: '0 16px 14px', fontSize: 12, color: ds.textMuted, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif" }}>
-            Your data is stored only on this device — it never leaves your phone and no one else can access it. However, it can be lost if you clear your browser data, delete the app, or switch devices. We recommend a monthly backup.
-          </div>
-        </div>
-
-        {/* About */}
-        <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, color: '#a5a5a5', marginBottom: 8, paddingLeft: 4, fontFamily: "'DM Sans', sans-serif" }}>
-          About
-        </div>
-        <div style={{
-          background: ds.card, borderRadius: ds.radiusLg, padding: '16px 18px', marginBottom: 16,
-          boxShadow: ds.cardShadow, border: ds.cardBorder,
-        }}>
-          <p style={{ fontSize: 13, color: ds.text, lineHeight: 1.6, margin: '0 0 12px', fontFamily: "'DM Sans', sans-serif" }}>
-            TrackPat was made with love to support my partner after his liver transplant. It started as a simple way to keep on top of daily recovery — and grew into something we hope might help others too.
-          </p>
-          <p style={{ fontSize: 12, color: ds.textMuted, lineHeight: 1.6, margin: '0 0 12px', fontFamily: "'DM Sans', sans-serif" }}>
-            This app is designed to support your recovery journey, not to replace medical advice. It is not a diagnostic tool — always follow your transplant team's guidance and contact them with any concerns.
-          </p>
-          <p style={{ fontSize: 12, color: ds.textMuted, lineHeight: 1.6, margin: 0, fontFamily: "'DM Sans', sans-serif" }}>
-            We'd love to hear from you — whether it's feedback, suggestions, or just to say hello.
-          </p>
-          <a
-            href="mailto:emma@emmadutton.dev"
-            style={{
-              display: 'block', marginTop: 12, padding: '12px', borderRadius: ds.radiusSm,
-              background: ds.greenLight, color: ds.green, fontSize: 14, fontWeight: 600,
-              textAlign: 'center', textDecoration: 'none', fontFamily: "'DM Sans', sans-serif",
-            }}
-          >Send feedback</a>
-        </div>
-
         {showFoodSafety && (
           <FoodSafetyView transplantDate={transplantDate} onClose={() => setShowFoodSafety(false)} />
         )}
@@ -1753,6 +1861,19 @@ function ProfilePage({ onExport, onImport, showToast }) {
               catch { showToast('Failed to save appointments'); }
             }}
             onClose={() => setShowClinicAppts(false)}
+            allDays={allDays}
+            patientName={name}
+            transplantDate={transplantDate}
+          />
+        )}
+        {showSettings && (
+          <SettingsView
+            transplantDate={transplantDate}
+            onDateChange={handleDateChange}
+            onExport={onExport}
+            onImport={onImport}
+            fileInputRef={fileInputRef}
+            onClose={() => setShowSettings(false)}
           />
         )}
       </div>

@@ -1285,10 +1285,11 @@ function ClinicAppointmentDetail({ appointment, onSave, onDelete, onClose }) {
           <div style={{ ...tileLabel, color: '#7ab8a8', marginBottom: 12 }}>Notes</div>
           <textarea
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={(e) => { setNotes(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
+            ref={(el) => { if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }}
             placeholder="Capture notes during or after your appointment…"
-            rows={5}
-            style={{ ...inputStyle, resize: 'vertical' }}
+            rows={3}
+            style={{ ...inputStyle, resize: 'none', overflow: 'hidden' }}
           />
         </div>
       </div>

@@ -1,41 +1,72 @@
-# Recovery Log
+# TrackPat
 
-A calm, offline-first recovery tracking app. Built as an installable PWA with local IndexedDB storage.
+A calm, offline-first post-transplant recovery tracker. Built as an installable PWA with local IndexedDB storage — your data never leaves your device.
 
-## Quick Deploy to Cloudflare Pages
+## Features
+
+### Overview (daily logging)
+- **Vitals** — temperature, blood pressure, heart rate, weight
+- **Pain** — 0-10 scale with body area tracking
+- **Activity** — walk minutes logging
+- **Sleep** — hours and quality
+- **Appetite & Mood** — thumb/emoji scales with notes
+- **Bowel movements** — tracking with notes
+- **Symptoms** — checklist (fever, jaundice, nausea, vomiting, swelling, dark urine, reduced urine, abdominal pain, pale stools)
+- **Medications** — schedule-based tracking with timed events and archiving
+- Day-by-day navigation with encouraging messages
+
+### Trends
+- Mini charts for pain, activity, weight, mood and more
+- Visual progress over time
+
+### Profile
+- Greeting with editable name and days-since-transplant counter
+- Logging stats (streak, total days, weekly)
+- **Food safety** — lifetime and temporary restrictions with a waiter mode for showing staff at restaurants
+- **Clinic appointments** — notes, questions, and exportable clinician reports with charts
+
+### Settings (via cog icon)
+- Transplant date
+- Backup and restore (JSON export/import)
+- About and feedback
+
+### Other
+- **Onboarding** — guided setup for first-time users
+- **Toast notifications** — save confirmations and error feedback
+- **Offline-first** — works without internet after install
+- **Persistent storage** — requested on startup to protect data from browser cleanup
+
+## Deploy to Cloudflare Pages
 
 ### 1. Push to GitHub
 
 ```bash
-# Create a new repo on github.com, then:
 git init
 git add .
 git commit -m "Initial commit"
 git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/recovery-log.git
+git remote add origin https://github.com/YOUR_USERNAME/TrackPat.git
 git push -u origin main
 ```
 
 ### 2. Connect to Cloudflare Pages
 
-1. Go to [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages** → **Create**
-2. Connect your GitHub account and select the `recovery-log` repo
+1. Go to [dash.cloudflare.com](https://dash.cloudflare.com) > **Workers & Pages** > **Create**
+2. Connect your GitHub account and select the repo
 3. Set build settings:
    - **Build command:** `npm run build`
    - **Build output directory:** `dist`
 4. Click **Save and Deploy**
 
-Your app will be live at `https://recovery-log.pages.dev` (or custom domain).
+### 3. Install on phone
 
-### 3. Install on Phone
-
-1. Open the URL in Chrome on Android
-2. Chrome will show **"Add to Home Screen"** — tap it
+1. Open the URL in your mobile browser
+2. Tap **"Add to Home Screen"** when prompted
 3. The app is now installed and works offline
 
-> **Important:** Installing as a PWA grants persistent storage automatically on Android Chrome, protecting the data from browser cleanup.
+> **Note:** Installing as a PWA grants persistent storage automatically on Android Chrome, protecting data from browser cleanup.
 
-## Local Development
+## Local development
 
 ```bash
 npm install
@@ -44,24 +75,32 @@ npm run build   # Production build to dist/
 npm run preview # Preview the production build
 ```
 
-## Data Storage
+## Tech stack
 
-All data is stored locally in IndexedDB on the device. Nothing is sent to any server.
+- React 18 + Vite
+- Tailwind CSS
+- Dexie (IndexedDB wrapper)
+- lucide-react (icons)
+- vite-plugin-pwa (service worker)
 
-- **Persistent storage** is requested on app startup
-- **Backup** can be downloaded as JSON via the "Download Backup" button on the Overview tab
+## Data storage
+
+All data is stored locally in IndexedDB. Nothing is sent to any server.
+
 - Data survives browser restarts, phone reboots, and app closures
-- Data is lost only if: the app is uninstalled, browser data is manually cleared, or the phone is factory reset
+- Backup can be downloaded as JSON via Settings > Backup data
+- Data is lost only if the app is uninstalled, browser data is manually cleared, or the device is factory reset
 
-## Project Structure
+## Project structure
 
 ```
 src/
   main.jsx    # Entry point, requests persistent storage
   App.jsx     # All UI components
-  db.js       # Dexie database, data access helpers, export
+  db.js       # Dexie database, data access helpers, export/import
   index.css   # Tailwind + global styles
 public/
+  icon.svg
   icon-192.png
   icon-512.png
 ```

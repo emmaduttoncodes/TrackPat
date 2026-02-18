@@ -1177,11 +1177,255 @@ function FoodSafetyView({ transplantDate, onClose }) {
   );
 }
 
+function ClinicAppointmentDetail({ appointment, onSave, onDelete, onClose }) {
+  const [date, setDate] = useState(appointment.date);
+  const [questions, setQuestions] = useState(appointment.questions);
+  const [notes, setNotes] = useState(appointment.notes);
+
+  const save = () => {
+    onSave({ ...appointment, date, questions, notes });
+  };
+
+  const addQuestion = () => {
+    setQuestions([...questions, { id: uid(), text: '' }]);
+  };
+  const updateQuestion = (i, text) => {
+    const n = [...questions];
+    n[i] = { ...n[i], text };
+    setQuestions(n);
+  };
+  const removeQuestion = (i) => {
+    setQuestions(questions.filter((_, j) => j !== i));
+  };
+
+  // Auto-save on changes
+  useEffect(() => {
+    const timeout = setTimeout(save, 400);
+    return () => clearTimeout(timeout);
+  }, [date, questions, notes]);
+
+  return (
+    <div className="fixed inset-0 z-50" style={{ background: ds.bg, overflowY: 'auto' }}>
+      <div style={{ padding: '24px 20px 120px', paddingTop: 'calc(24px + env(safe-area-inset-top))' }}>
+        {/* Header */}
+        <div className="flex items-center gap-3" style={{ marginBottom: 20 }}>
+          <button
+            onClick={onClose}
+            className="flex items-center justify-center"
+            style={{
+              width: 34, height: 34, borderRadius: '50%',
+              background: '#e8e6e1', color: ds.textMuted, border: 'none',
+              fontSize: 18, cursor: 'pointer', flexShrink: 0,
+            }}
+          >‹</button>
+          <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: ds.text, margin: 0, flex: 1 }}>
+            {date ? formatDate(date) : 'New appointment'}
+          </h2>
+          <button
+            onClick={() => { onDelete(appointment.id); onClose(); }}
+            style={{ fontSize: 13, color: '#c97070', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
+          >Delete</button>
+        </div>
+
+        {/* Date */}
+        <div style={{
+          background: ds.card, borderRadius: ds.radiusLg, padding: '16px 18px',
+          boxShadow: ds.cardShadow, border: ds.cardBorder, marginBottom: 16,
+        }}>
+          <label style={labelStyle}>Date</label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            style={inputStyle}
+          />
+        </div>
+
+        {/* Questions */}
+        <div style={{
+          background: ds.card, borderRadius: ds.radiusLg, padding: '16px 18px',
+          boxShadow: ds.cardShadow, border: ds.cardBorder, marginBottom: 16,
+        }}>
+          <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+            <div style={{ ...tileLabel, color: '#8b9cc7', margin: 0 }}>Questions to ask</div>
+            <button
+              onClick={addQuestion}
+              style={{ fontSize: 13, color: ds.green, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}
+            >+ Add</button>
+          </div>
+          {questions.length === 0 && (
+            <p style={{ fontSize: 13, color: ds.textPlaceholder, margin: 0, fontFamily: "'DM Sans', sans-serif" }}>
+              Tap "+ Add" to prepare questions for your appointment.
+            </p>
+          )}
+          {questions.map((q, i) => (
+            <div key={q.id} className="flex gap-2 items-start mb-2">
+              <span style={{ fontSize: 12, color: ds.textLight, marginTop: 12, flexShrink: 0 }}>{i + 1}.</span>
+              <input
+                value={q.text}
+                onChange={(e) => updateQuestion(i, e.target.value)}
+                placeholder="Type your question…"
+                style={{ ...inputStyle, flex: 1 }}
+              />
+              <button
+                onClick={() => removeQuestion(i)}
+                style={{ fontSize: 14, color: '#c97070', background: 'none', border: 'none', cursor: 'pointer', marginTop: 8, flexShrink: 0 }}
+              >×</button>
+            </div>
+          ))}
+        </div>
+
+        {/* Notes */}
+        <div style={{
+          background: ds.card, borderRadius: ds.radiusLg, padding: '16px 18px',
+          boxShadow: ds.cardShadow, border: ds.cardBorder, marginBottom: 16,
+        }}>
+          <div style={{ ...tileLabel, color: '#7ab8a8', marginBottom: 12 }}>Notes</div>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Capture notes during or after your appointment…"
+            rows={5}
+            style={{ ...inputStyle, resize: 'vertical' }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ClinicAppointmentsView({ appointments, onSave, onClose }) {
+  const [selectedAppt, setSelectedAppt] = useState(null);
+
+  const sorted = [...appointments].sort((a, b) => {
+    const today = todayStr();
+    const aFuture = a.date >= today;
+    const bFuture = b.date >= today;
+    if (aFuture && !bFuture) return -1;
+    if (!aFuture && bFuture) return 1;
+    if (aFuture && bFuture) return a.date.localeCompare(b.date);
+    return b.date.localeCompare(a.date);
+  });
+
+  const addAppointment = () => {
+    const newAppt = { id: uid(), date: '', questions: [], notes: '' };
+    const updated = [...appointments, newAppt];
+    onSave(updated);
+    setSelectedAppt(newAppt);
+  };
+
+  const saveAppointment = (appt) => {
+    const updated = appointments.map((a) => a.id === appt.id ? appt : a);
+    onSave(updated);
+  };
+
+  const deleteAppointment = (id) => {
+    const updated = appointments.filter((a) => a.id !== id);
+    onSave(updated);
+  };
+
+  if (selectedAppt) {
+    const current = appointments.find((a) => a.id === selectedAppt.id) || selectedAppt;
+    return (
+      <ClinicAppointmentDetail
+        appointment={current}
+        onSave={saveAppointment}
+        onDelete={deleteAppointment}
+        onClose={() => setSelectedAppt(null)}
+      />
+    );
+  }
+
+  const today = todayStr();
+
+  return (
+    <div className="fixed inset-0 z-50" style={{ background: ds.bg, overflowY: 'auto' }}>
+      <div style={{ padding: '24px 20px 120px', paddingTop: 'calc(24px + env(safe-area-inset-top))' }}>
+        {/* Header */}
+        <div className="flex items-center gap-3" style={{ marginBottom: 20 }}>
+          <button
+            onClick={onClose}
+            className="flex items-center justify-center"
+            style={{
+              width: 34, height: 34, borderRadius: '50%',
+              background: '#e8e6e1', color: ds.textMuted, border: 'none',
+              fontSize: 18, cursor: 'pointer', flexShrink: 0,
+            }}
+          >‹</button>
+          <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: ds.text, margin: 0, flex: 1 }}>
+            Clinic appointments
+          </h2>
+          <button
+            onClick={addAppointment}
+            style={{
+              fontSize: 14, color: ds.green, background: 'none', border: 'none',
+              cursor: 'pointer', fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
+            }}
+          >+ Add</button>
+        </div>
+
+        {/* Empty state */}
+        {sorted.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '48px 20px' }}>
+            <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.3 }}>📋</div>
+            <p style={{ fontSize: 15, fontWeight: 600, color: ds.text, marginBottom: 4, fontFamily: "'DM Sans', sans-serif" }}>No appointments yet</p>
+            <p style={{ fontSize: 13, color: ds.textMuted, maxWidth: 260, margin: '0 auto', lineHeight: 1.5, fontFamily: "'DM Sans', sans-serif" }}>
+              Tap "+ Add" to schedule an appointment and prepare questions for your clinic visit.
+            </p>
+          </div>
+        )}
+
+        {/* Appointment list */}
+        {sorted.map((appt) => {
+          const isUpcoming = appt.date >= today;
+          const qCount = appt.questions.filter((q) => q.text.trim()).length;
+          const hasNotes = appt.notes && appt.notes.trim().length > 0;
+          return (
+            <div
+              key={appt.id}
+              onClick={() => setSelectedAppt(appt)}
+              style={{
+                background: ds.card, borderRadius: ds.radiusLg, padding: '14px 16px',
+                boxShadow: ds.cardShadow, border: ds.cardBorder, marginBottom: 10,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12,
+              }}
+              className="active:scale-[0.98]"
+            >
+              <div style={{
+                width: 40, height: 40, borderRadius: ds.radiusSm, flexShrink: 0,
+                background: isUpcoming ? ds.greenLight : ds.cardAlt,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 18,
+              }}>
+                {isUpcoming ? '📅' : '✓'}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: ds.text, fontFamily: "'DM Sans', sans-serif" }}>
+                  {appt.date ? formatDate(appt.date) : 'No date set'}
+                </div>
+                <div style={{ fontSize: 12, color: ds.textMuted, fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
+                  {[
+                    qCount > 0 && `${qCount} question${qCount !== 1 ? 's' : ''}`,
+                    hasNotes && 'Has notes',
+                  ].filter(Boolean).join(' · ') || 'No details yet'}
+                </div>
+              </div>
+              <span style={{ color: ds.textPlaceholder, fontSize: 18 }}>›</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function ProfilePage({ onExport, onImport, showToast }) {
   const [transplantDate, setTransplantDate] = useState('');
   const [name, setName] = useState('Friend');
   const [editingName, setEditingName] = useState(false);
   const [showFoodSafety, setShowFoodSafety] = useState(false);
+  const [showClinicAppts, setShowClinicAppts] = useState(false);
+  const [clinicAppts, setClinicAppts] = useState([]);
   const [allDays, setAllDays] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const fileInputRef = useRef(null);
@@ -1190,10 +1434,12 @@ function ProfilePage({ onExport, onImport, showToast }) {
     Promise.all([
       loadSetting('transplantDate'),
       loadSetting('userName'),
+      loadSetting('clinicAppointments'),
       loadAllDays(),
-    ]).then(([txDate, storedName, days]) => {
+    ]).then(([txDate, storedName, appts, days]) => {
       if (txDate) setTransplantDate(txDate);
       if (storedName) setName(storedName);
+      if (appts) setClinicAppts(appts);
       setAllDays(days);
       setLoaded(true);
     });
@@ -1383,6 +1629,30 @@ function ProfilePage({ onExport, onImport, showToast }) {
           <span style={{ color: ds.textPlaceholder, fontSize: 18 }}>›</span>
         </div>
 
+        {/* Clinic appointments */}
+        <div
+          onClick={() => setShowClinicAppts(true)}
+          style={{
+            background: ds.card, borderRadius: ds.radiusLg, padding: '14px 16px',
+            boxShadow: ds.cardShadow, border: ds.cardBorder, marginBottom: 16,
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12,
+          }}
+          className="active:scale-[0.98]"
+        >
+          <span style={{ fontSize: 24 }}>📋</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 600, color: ds.text, fontFamily: "'DM Sans', sans-serif" }}>Clinic appointments</div>
+            <div style={{ fontSize: 12, color: ds.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
+              {(() => {
+                const today = todayStr();
+                const upcoming = clinicAppts.filter((a) => a.date >= today).sort((a, b) => a.date.localeCompare(b.date));
+                return upcoming.length > 0 ? `Next: ${formatDate(upcoming[0].date)}` : 'No upcoming appointments';
+              })()}
+            </div>
+          </div>
+          <span style={{ color: ds.textPlaceholder, fontSize: 18 }}>›</span>
+        </div>
+
         {/* Settings */}
         <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, color: '#a5a5a5', marginBottom: 8, paddingLeft: 4, fontFamily: "'DM Sans', sans-serif" }}>
           Settings
@@ -1415,7 +1685,7 @@ function ProfilePage({ onExport, onImport, showToast }) {
           boxShadow: ds.cardShadow, border: ds.cardBorder,
         }}>
           <button onClick={onExport} className="w-full text-left" style={{ padding: '16px', fontSize: 15, color: ds.text, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
-            Download backup
+            Backup data
             <span style={{ float: 'right', color: ds.textPlaceholder }}>›</span>
           </button>
           <div style={{ borderTop: `1px solid ${ds.divider}` }}>
@@ -1466,6 +1736,17 @@ function ProfilePage({ onExport, onImport, showToast }) {
         {showFoodSafety && (
           <FoodSafetyView transplantDate={transplantDate} onClose={() => setShowFoodSafety(false)} />
         )}
+        {showClinicAppts && (
+          <ClinicAppointmentsView
+            appointments={clinicAppts}
+            onSave={async (updated) => {
+              setClinicAppts(updated);
+              try { await saveSetting('clinicAppointments', updated); }
+              catch { showToast('Failed to save appointments'); }
+            }}
+            onClose={() => setShowClinicAppts(false)}
+          />
+        )}
       </div>
     </div>
   );
@@ -1503,7 +1784,7 @@ function PainSheet({ data, onChange }) {
             <span style={{ fontSize: 12, color: ds.textLight }}>{e.time}</span>
             <button onClick={() => remove(i)} style={{ fontSize: 12, color: '#c97070' }}>Remove</button>
           </div>
-          <Input label="Pain level (1–10)" value={e.level} onChange={(v) => update(i, 'level', v)} type="number" placeholder="5" min={1} max={10} />
+          <Input label="Pain level (0–10)" value={e.level} onChange={(v) => update(i, 'level', v)} type="number" placeholder="5" min={0} max={10} />
           <Input label="Location" value={e.location} onChange={(v) => update(i, 'location', v)} placeholder="e.g. abdomen" />
           <TextArea label="Note" value={e.note} onChange={(v) => update(i, 'note', v)} />
         </div>

@@ -1261,11 +1261,13 @@ function ClinicAppointmentDetail({ appointment, onSave, onDelete, onClose }) {
           {questions.map((q, i) => (
             <div key={q.id} className="flex gap-2 items-start mb-2">
               <span style={{ fontSize: 12, color: ds.textLight, marginTop: 12, flexShrink: 0 }}>{i + 1}.</span>
-              <input
+              <textarea
                 value={q.text}
-                onChange={(e) => updateQuestion(i, e.target.value)}
+                onChange={(e) => { updateQuestion(i, e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
+                ref={(el) => { if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }}
                 placeholder="Type your question…"
-                style={{ ...inputStyle, flex: 1 }}
+                rows={1}
+                style={{ ...inputStyle, flex: 1, resize: 'none', overflow: 'hidden' }}
               />
               <button
                 onClick={() => removeQuestion(i)}

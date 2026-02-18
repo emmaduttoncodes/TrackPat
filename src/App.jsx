@@ -549,8 +549,8 @@ function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
       <div style={{ ...tileLabel, color, marginBottom: 8 }}>{title}</div>
       <svg
         ref={svgRef}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ width: '100%', height: 'auto' }}
+        viewBox={`0 -4 ${W} ${H + 4}`}
+        style={{ width: '100%', height: 'auto', overflow: 'visible' }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -589,15 +589,20 @@ function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
           );
         })}
         {/* Active point indicator */}
-        {ap && (
-          <>
-            <line x1={ap.px} y1={padT} x2={ap.px} y2={padT + chartH} stroke={color} strokeWidth="1" opacity="0.3" strokeDasharray="3,3" />
-            <rect x={ap.px - 28} y={Math.max(0, ap.py - 24)} width="56" height="18" rx="4" fill={color} />
-            <text x={ap.px} y={Math.max(0, ap.py - 24) + 12.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="600" fontFamily="DM Sans, sans-serif">
-              {formatY ? formatY(ap.y) : ap.y}{unit ? ` ${unit}` : ''}
-            </text>
-          </>
-        )}
+        {ap && (() => {
+          const label = `${formatY ? formatY(ap.y) : ap.y}${unit ? ` ${unit}` : ''} · ${formatDate(ap.label)}`;
+          const labelW = Math.max(72, label.length * 5.5 + 16);
+          const labelX = Math.min(Math.max(labelW / 2, ap.px), W - labelW / 2);
+          return (
+            <>
+              <line x1={ap.px} y1={padT} x2={ap.px} y2={padT + chartH} stroke={color} strokeWidth="1" opacity="0.3" strokeDasharray="3,3" />
+              <rect x={labelX - labelW / 2} y={-2} width={labelW} height="18" rx="4" fill={color} />
+              <text x={labelX} y={10.5} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="600" fontFamily="DM Sans, sans-serif">
+                {label}
+              </text>
+            </>
+          );
+        })()}
       </svg>
       {/* Latest value */}
       <div style={{ fontSize: 12, color: ds.textLight, marginTop: 4, textAlign: 'right' }}>

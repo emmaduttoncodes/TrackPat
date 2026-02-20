@@ -20,6 +20,9 @@ const formatDate = (dateStr) => {
   return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
 };
 
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const getDayName = (dateStr) => DAY_NAMES[new Date(dateStr + 'T12:00:00').getDay()];
+
 const formatTime = (t) => {
   const [h, m] = t.split(':').map(Number);
   const suffix = h >= 12 ? 'pm' : 'am';
@@ -2048,7 +2051,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
   const [editMode, setEditMode] = useState(false);
   const [editingMed, setEditingMed] = useState(null);
   const [addingMed, setAddingMed] = useState(false);
-  const [newMed, setNewMed] = useState({ name: '', doseMg: '', time: '08:00', group: 'Morning', active: true, foodInstruction: '' });
+  const [newMed, setNewMed] = useState({ name: '', doseMg: '', time: '08:00', group: 'Morning', active: true, foodInstruction: '', days: [] });
   const [takenSheet, setTakenSheet] = useState(null);
 
   const groups = ['Morning', 'Afternoon', 'Evening'];
@@ -2134,7 +2137,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
       await saveSchedule({ ...newMed, id: uid() });
       const updated = await loadSchedules();
       setSchedules(updated);
-      setNewMed({ name: '', doseMg: '', time: '08:00', group: 'Morning', active: true, foodInstruction: '' });
+      setNewMed({ name: '', doseMg: '', time: '08:00', group: 'Morning', active: true, foodInstruction: '', days: [] });
       setAddingMed(false);
       showToast('Medication added');
     } catch {
@@ -2151,7 +2154,8 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
       </div>
 
       {groups.map((group) => {
-        const meds = schedules.filter((s) => s.group === group && s.active).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+        const dayName = getDayName(currentDate);
+        const meds = schedules.filter((s) => s.group === group && s.active && (!s.days || s.days.length === 0 || s.days.includes(dayName))).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
         if (!meds.length) return null;
         return (
           <div key={group} className="mb-5">
@@ -2177,6 +2181,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
                       <div style={{ fontSize: 15, color: ds.text, fontWeight: 500 }}>{med.name}</div>
                       <div style={{ fontSize: 12, color: ds.textLight }}>
                         {med.doseMg} mg · {med.time}
+                        {med.days && med.days.length > 0 && <span style={{ color: '#9b8bb4' }}> · {med.days.join(', ')}</span>}
                         {med.foodInstruction === 'before' && <span style={{ color: '#c9a87a' }}> · Before food</span>}
                         {med.foodInstruction === 'with' && <span style={{ color: '#8b9cc7' }}> · With food</span>}
                       </div>
@@ -2229,6 +2234,18 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
                 ))}
               </div>
             </Field>
+            <Field label="Days">
+              <div className="flex gap-1.5 flex-wrap">
+                {DAY_NAMES.map((d) => {
+                  const days = editingMed.days || [];
+                  const selected = days.includes(d);
+                  return (
+                    <button key={d} onClick={() => setEditingMed({ ...editingMed, days: selected ? days.filter((x) => x !== d) : [...days, d] })} className="px-3 py-2 rounded-xl text-sm font-medium" style={{ background: selected ? ds.green : ds.divider, color: selected ? '#fff' : ds.textMuted }}>{d}</button>
+                  );
+                })}
+              </div>
+              <div style={{ fontSize: 12, color: ds.textLight, marginTop: 6 }}>{(!editingMed.days || editingMed.days.length === 0) ? 'Every day (default)' : editingMed.days.join(', ')}</div>
+            </Field>
             <Field label="Food instruction">
               <div className="flex gap-2">
                 {[{ value: '', label: 'None' }, { value: 'before', label: 'Before food' }, { value: 'with', label: 'With food' }].map((opt) => (
@@ -2251,6 +2268,18 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
               <button key={g} onClick={() => setNewMed({ ...newMed, group: g })} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: newMed.group === g ? ds.green : ds.divider, color: newMed.group === g ? '#fff' : ds.textMuted }}>{g}</button>
             ))}
           </div>
+        </Field>
+        <Field label="Days">
+          <div className="flex gap-1.5 flex-wrap">
+            {DAY_NAMES.map((d) => {
+              const days = newMed.days || [];
+              const selected = days.includes(d);
+              return (
+                <button key={d} onClick={() => setNewMed({ ...newMed, days: selected ? days.filter((x) => x !== d) : [...days, d] })} className="px-3 py-2 rounded-xl text-sm font-medium" style={{ background: selected ? ds.green : ds.divider, color: selected ? '#fff' : ds.textMuted }}>{d}</button>
+              );
+            })}
+          </div>
+          <div style={{ fontSize: 12, color: ds.textLight, marginTop: 6 }}>{(!newMed.days || newMed.days.length === 0) ? 'Every day (default)' : newMed.days.join(', ')}</div>
         </Field>
         <Field label="Food instruction">
           <div className="flex gap-2">

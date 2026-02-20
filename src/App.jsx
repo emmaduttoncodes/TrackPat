@@ -20,6 +20,12 @@ const formatDate = (dateStr) => {
   return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
 };
 
+const formatTime = (t) => {
+  const [h, m] = t.split(':').map(Number);
+  const suffix = h >= 12 ? 'pm' : 'am';
+  return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')}${suffix}`;
+};
+
 const addDays = (dateStr, n) => {
   const d = new Date(dateStr + 'T12:00:00');
   d.setDate(d.getDate() + n);
@@ -1171,6 +1177,7 @@ function FoodSafetyView({ transplantDate, onClose }) {
 
 function ClinicAppointmentDetail({ appointment, onSave, onDelete, onClose, allAppointments, allDays, patientName, transplantDate }) {
   const [date, setDate] = useState(appointment.date);
+  const [time, setTime] = useState(appointment.time || '');
   const [questions, setQuestions] = useState(appointment.questions);
   const [notes, setNotes] = useState(appointment.notes);
 
@@ -1240,7 +1247,7 @@ function ClinicAppointmentDetail({ appointment, onSave, onDelete, onClose, allAp
   })();
 
   const save = () => {
-    onSave({ ...appointment, date, questions, notes });
+    onSave({ ...appointment, date, time, questions, notes });
   };
 
   const addQuestion = () => {
@@ -1259,7 +1266,7 @@ function ClinicAppointmentDetail({ appointment, onSave, onDelete, onClose, allAp
   useEffect(() => {
     const timeout = setTimeout(save, 400);
     return () => clearTimeout(timeout);
-  }, [date, questions, notes]);
+  }, [date, time, questions, notes]);
 
   return (
     <div className="fixed inset-0 z-50" style={{ background: ds.bg, overflowY: 'auto' }}>
@@ -1284,7 +1291,7 @@ function ClinicAppointmentDetail({ appointment, onSave, onDelete, onClose, allAp
           >Delete</button>
         </div>
 
-        {/* Date */}
+        {/* Date & Time */}
         <div style={{
           background: ds.card, borderRadius: ds.radiusLg, padding: '16px 18px',
           boxShadow: ds.cardShadow, border: ds.cardBorder, marginBottom: 16,
@@ -1294,6 +1301,13 @@ function ClinicAppointmentDetail({ appointment, onSave, onDelete, onClose, allAp
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
+            style={inputStyle}
+          />
+          <label style={{ ...labelStyle, marginTop: 12 }}>Time</label>
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
             style={inputStyle}
           />
         </div>
@@ -1380,12 +1394,15 @@ function ClinicAppointmentsView({ appointments, onSave, onClose, allDays, patien
     const bFuture = b.date >= today;
     if (aFuture && !bFuture) return -1;
     if (!aFuture && bFuture) return 1;
-    if (aFuture && bFuture) return a.date.localeCompare(b.date);
-    return b.date.localeCompare(a.date);
+    const dateCmp = aFuture
+      ? a.date.localeCompare(b.date)
+      : b.date.localeCompare(a.date);
+    if (dateCmp !== 0) return dateCmp;
+    return (a.time || '').localeCompare(b.time || '');
   });
 
   const addAppointment = () => {
-    const newAppt = { id: uid(), date: '', questions: [], notes: '' };
+    const newAppt = { id: uid(), date: '', time: '', questions: [], notes: '' };
     const updated = [...appointments, newAppt];
     onSave(updated);
     setSelectedAppt(newAppt);
@@ -1482,7 +1499,7 @@ function ClinicAppointmentsView({ appointments, onSave, onClose, allDays, patien
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 600, color: ds.text, fontFamily: "'DM Sans', sans-serif" }}>
-                  {appt.date ? formatDate(appt.date) : 'No date set'}
+                  {appt.date ? formatDate(appt.date) + (appt.time ? ` at ${formatTime(appt.time)}` : '') : 'No date set'}
                 </div>
                 <div style={{ fontSize: 12, color: ds.textMuted, fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
                   {[
@@ -1841,8 +1858,10 @@ function ProfilePage({ onExport, onImport, showToast }) {
             <div style={{ fontSize: 12, color: ds.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
               {(() => {
                 const today = todayStr();
-                const upcoming = clinicAppts.filter((a) => a.date >= today).sort((a, b) => a.date.localeCompare(b.date));
-                return upcoming.length > 0 ? `Next: ${formatDate(upcoming[0].date)}` : 'No upcoming appointments';
+                const upcoming = clinicAppts.filter((a) => a.date >= today).sort((a, b) => a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || ''));
+                if (upcoming.length === 0) return 'No upcoming appointments';
+                const next = upcoming[0];
+                return `Next: ${formatDate(next.date)}${next.time ? ` at ${formatTime(next.time)}` : ''}`;
               })()}
             </div>
           </div>

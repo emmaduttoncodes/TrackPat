@@ -2054,7 +2054,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
   const [newMed, setNewMed] = useState({ name: '', doseMg: '', time: '08:00', group: 'Morning', active: true, foodInstruction: '', days: [] });
   const [takenSheet, setTakenSheet] = useState(null);
 
-  const groups = ['Morning', 'Afternoon', 'Evening'];
+  const groups = ['Morning', 'Afternoon', 'Evening', 'Bedtime'];
   const getEvent = (scheduleId) => events.find((e) => e.date === currentDate && e.scheduleId === scheduleId);
 
   const openTakenSheet = (med) => {

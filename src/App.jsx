@@ -2228,7 +2228,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
             <Input label="Dose (mg)" value={editingMed.doseMg} onChange={(v) => setEditingMed({ ...editingMed, doseMg: v })} type="number" />
             <Input label="Time" value={editingMed.time} onChange={(v) => setEditingMed({ ...editingMed, time: v })} type="time" />
             <Field label="Group">
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {groups.map((g) => (
                   <button key={g} onClick={() => setEditingMed({ ...editingMed, group: g })} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: editingMed.group === g ? ds.green : ds.divider, color: editingMed.group === g ? '#fff' : ds.textMuted }}>{g}</button>
                 ))}
@@ -2263,7 +2263,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
         <Input label="Dose (mg)" value={newMed.doseMg} onChange={(v) => setNewMed({ ...newMed, doseMg: v })} type="number" />
         <Input label="Time" value={newMed.time} onChange={(v) => setNewMed({ ...newMed, time: v })} type="time" />
         <Field label="Group">
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {groups.map((g) => (
               <button key={g} onClick={() => setNewMed({ ...newMed, group: g })} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: newMed.group === g ? ds.green : ds.divider, color: newMed.group === g ? '#fff' : ds.textMuted }}>{g}</button>
             ))}

@@ -2060,9 +2060,6 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, se
   const [editingPrn, setEditingPrn] = useState(null);
   const [prnDoseSheet, setPrnDoseSheet] = useState(null);
   const [showPrnDoses, setShowPrnDoses] = useState(false);
-  const amber = '#c9914a';
-  const amberLight = '#faf0e4';
-
   const groups = ['Morning', 'Afternoon', 'Evening', 'Bedtime'];
   const getEvent = (scheduleId) => events.find((e) => e.date === currentDate && e.scheduleId === scheduleId);
 
@@ -2277,9 +2274,9 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, se
 
       {/* ─── As-needed (PRN) section ─── */}
       <div className="mt-6 mb-5">
-        <div className="mb-2 px-1" style={{ ...tileLabel, color: amber }}>As needed</div>
+        <div className="mb-2 px-1" style={{ ...tileLabel, color: ds.green }}>As needed</div>
         {activePrnMeds.length === 0 && !editMode && (
-          <div className="text-center py-4 rounded-2xl" style={{ background: amberLight, color: amber, fontSize: 13 }}>
+          <div className="text-center py-4 rounded-2xl" style={{ background: ds.greenLight, color: ds.green, fontSize: 13 }}>
             No as-needed medications yet. Tap Edit to add one.
           </div>
         )}
@@ -2297,7 +2294,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, se
                   style={{ borderBottom: i < activePrnMeds.length - 1 ? `1px solid ${ds.divider}` : 'none' }}
                 >
                   {!editMode ? (
-                    <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: count > 0 ? amber : ds.border }}>
+                    <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: count > 0 ? ds.greenCheck : ds.border }}>
                       {count > 0 && <span className="text-white text-xs font-bold">{count}</span>}
                     </div>
                   ) : (
@@ -2311,7 +2308,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, se
                     </div>
                   </div>
                   {!editMode && count > 0 && (
-                    <div style={{ fontSize: 12, color: amber, textAlign: 'right' }}>
+                    <div style={{ fontSize: 12, color: ds.green, textAlign: 'right' }}>
                       <div>{count}x today</div>
                       {lastDose && <div style={{ color: ds.textLight }}>{formatTime(lastDose.time)}</div>}
                     </div>
@@ -2323,7 +2320,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, se
           </div>
         )}
         {editMode && (
-          <button onClick={() => setAddingPrn(true)} className="w-full mt-2 py-3 rounded-2xl text-sm font-medium" style={{ background: amberLight, color: amber }}>+ Add as-needed medication</button>
+          <button onClick={() => setAddingPrn(true)} className="w-full mt-2 py-3 rounded-2xl text-sm font-medium" style={{ background: ds.greenLight, color: ds.green }}>+ Add as-needed medication</button>
         )}
         {editMode && stoppedPrnMeds.length > 0 && (
           <div className="mt-4">
@@ -2335,7 +2332,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, se
                     <div style={{ fontSize: 15, color: ds.textMuted, fontWeight: 500 }}>{med.name}</div>
                     <div style={{ fontSize: 12, color: ds.textLight }}>{med.doseMg ? `${med.doseMg} mg` : 'As needed'}</div>
                   </div>
-                  <button onClick={async () => { await savePrnMed({ ...med, active: true }); setPrnMeds(await loadPrnMeds()); showToast('Medication restarted'); }} className="text-sm px-3 py-1.5 rounded-full font-medium" style={{ background: amberLight, color: amber }}>Restart</button>
+                  <button onClick={async () => { await savePrnMed({ ...med, active: true }); setPrnMeds(await loadPrnMeds()); showToast('Medication restarted'); }} className="text-sm px-3 py-1.5 rounded-full font-medium" style={{ background: ds.greenLight, color: ds.green }}>Restart</button>
                 </div>
               ))}
             </div>
@@ -2347,8 +2344,8 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, se
       {prnDoses.length > 0 && !editMode && (
         <div className="mb-5">
           <div className="flex items-center justify-between mb-2 px-1">
-            <div style={{ ...tileLabel, color: amber }}>Today's as-needed doses</div>
-            <button onClick={() => setShowPrnDoses(!showPrnDoses)} className="text-xs font-medium" style={{ color: amber }}>{showPrnDoses ? 'Hide' : 'Show'}</button>
+            <div style={{ ...tileLabel, color: ds.green }}>Today's as-needed doses</div>
+            <button onClick={() => setShowPrnDoses(!showPrnDoses)} className="text-xs font-medium" style={{ color: ds.green }}>{showPrnDoses ? 'Hide' : 'Show'}</button>
           </div>
           {showPrnDoses && (
             <div className="rounded-2xl overflow-hidden" style={{ background: ds.card, boxShadow: ds.cardShadow }}>
@@ -2356,7 +2353,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, se
                 const med = prnMeds.find((m) => m.id === dose.prnMedId);
                 return (
                   <div key={dose.id} className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: i < prnDoses.length - 1 ? `1px solid ${ds.divider}` : 'none' }}>
-                    <div style={{ fontSize: 12, color: amber, fontWeight: 600, minWidth: 52 }}>{formatTime(dose.time)}</div>
+                    <div style={{ fontSize: 12, color: ds.green, fontWeight: 600, minWidth: 52 }}>{formatTime(dose.time)}</div>
                     <div className="flex-1 min-w-0">
                       <div style={{ fontSize: 14, color: ds.text, fontWeight: 500 }}>{med ? med.name : 'Unknown'}</div>
                       {dose.doseMg && <div style={{ fontSize: 12, color: ds.textLight }}>{dose.doseMg} mg</div>}
@@ -2485,7 +2482,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, se
             <Input label="Dose (mg)" value={prnDoseSheet.doseMg} onChange={(v) => setPrnDoseSheet({ ...prnDoseSheet, doseMg: v })} type="number" />
             <Input label="Time" value={prnDoseSheet.time} onChange={(v) => setPrnDoseSheet({ ...prnDoseSheet, time: v })} type="time" />
             <TextArea label="Note (optional)" value={prnDoseSheet.note} onChange={(v) => setPrnDoseSheet({ ...prnDoseSheet, note: v })} placeholder="e.g. headache, mild pain..." />
-            <button onClick={savePrnDose} className="w-full mt-2 py-3 rounded-2xl text-sm font-semibold" style={{ background: amber, color: '#fff' }}>Log dose</button>
+            <button onClick={savePrnDose} className="w-full mt-2 py-3 rounded-2xl text-sm font-semibold" style={{ background: ds.green, color: '#fff' }}>Log dose</button>
           </>
         )}
       </BottomSheet>
@@ -2495,7 +2492,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, se
         <Input label="Name" value={newPrn.name} onChange={(v) => setNewPrn({ ...newPrn, name: v })} placeholder="e.g. Paracetamol" />
         <Input label="Default dose (mg)" value={newPrn.doseMg} onChange={(v) => setNewPrn({ ...newPrn, doseMg: v })} type="number" />
         <TextArea label="Note (optional)" value={newPrn.note} onChange={(v) => setNewPrn({ ...newPrn, note: v })} placeholder="e.g. For pain" />
-        <button onClick={saveNewPrn} className="w-full mt-3 py-3 rounded-2xl text-sm font-semibold" style={{ background: amber, color: '#fff' }}>Save medication</button>
+        <button onClick={saveNewPrn} className="w-full mt-3 py-3 rounded-2xl text-sm font-semibold" style={{ background: ds.green, color: '#fff' }}>Save medication</button>
       </BottomSheet>
 
       {/* PRN: Edit med */}

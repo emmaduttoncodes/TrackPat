@@ -33,6 +33,16 @@ db.version(3).stores({
   settings: 'key',
 });
 
+// v4: add as-needed (PRN) medication tables
+db.version(4).stores({
+  days: 'date',
+  medSchedules: 'id',
+  medEvents: '[date+scheduleId], date',
+  settings: 'key',
+  prnMeds: 'id',
+  prnDoses: '++id, date',
+});
+
 // ─── Default medication schedules ─────────────────────────────────────
 const defaultMedSchedules = [
   { id: 'm1', name: 'Tacrolimus', doseMg: '2', time: '08:00', group: 'Morning', active: true, foodInstruction: 'before' },
@@ -104,6 +114,31 @@ export async function deleteMedEvent(date, scheduleId) {
   await db.medEvents.delete([date, scheduleId]);
 }
 
+// ─── PRN (as-needed) medication helpers ──────────────────────────────
+export async function loadPrnMeds() {
+  return db.prnMeds.toArray();
+}
+
+export async function savePrnMed(med) {
+  await db.prnMeds.put(med);
+}
+
+export async function deletePrnMed(id) {
+  await db.prnMeds.delete(id);
+}
+
+export async function loadPrnDoses(date) {
+  return db.prnDoses.where('date').equals(date).toArray();
+}
+
+export async function addPrnDose(dose) {
+  await db.prnDoses.add(dose);
+}
+
+export async function deletePrnDose(id) {
+  await db.prnDoses.delete(id);
+}
+
 // ─── Settings helpers ────────────────────────────────────────────────
 export async function loadSetting(key) {
   const row = await db.settings.get(key);
@@ -116,11 +151,13 @@ export async function saveSetting(key, value) {
 
 // ─── Import all data from JSON ────────────────────────────────────────
 export async function importAllData(data) {
-  await db.transaction('rw', db.days, db.medSchedules, db.medEvents, db.settings, async () => {
+  await db.transaction('rw', db.days, db.medSchedules, db.medEvents, db.settings, db.prnMeds, db.prnDoses, async () => {
     await db.days.clear();
     await db.medSchedules.clear();
     await db.medEvents.clear();
     await db.settings.clear();
+    await db.prnMeds.clear();
+    await db.prnDoses.clear();
 
     if (data.days && data.days.length) {
       await db.days.bulkAdd(data.days.map((d) => {
@@ -142,16 +179,24 @@ export async function importAllData(data) {
       const entries = Object.entries(data.settings).map(([key, value]) => ({ key, value }));
       if (entries.length) await db.settings.bulkAdd(entries);
     }
+    if (data.prnMeds && data.prnMeds.length) {
+      await db.prnMeds.bulkAdd(data.prnMeds);
+    }
+    if (data.prnDoses && data.prnDoses.length) {
+      await db.prnDoses.bulkAdd(data.prnDoses);
+    }
   });
 }
 
 // ─── Export all data as JSON ──────────────────────────────────────────
 export async function exportAllData() {
-  const [days, schedules, events, settings] = await Promise.all([
+  const [days, schedules, events, settings, prnMeds, prnDoses] = await Promise.all([
     db.days.toArray(),
     db.medSchedules.toArray(),
     db.medEvents.toArray(),
     db.settings.toArray(),
+    db.prnMeds.toArray(),
+    db.prnDoses.toArray(),
   ]);
   return {
     exportedAt: new Date().toISOString(),
@@ -160,5 +205,7 @@ export async function exportAllData() {
     medSchedules: schedules,
     medEvents: events,
     settings: Object.fromEntries(settings.map((s) => [s.key, s.value])),
+    prnMeds,
+    prnDoses,
   };
 }

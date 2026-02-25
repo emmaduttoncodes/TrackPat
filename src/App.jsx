@@ -4,6 +4,7 @@ import {
   db, emptyDay, loadDay, saveDay, loadAllDays, loadSchedules, saveSchedule,
   loadMedEvents, saveMedEvent, deleteMedEvent, exportAllData,
   importAllData, loadSetting, saveSetting,
+  loadPrnMeds, savePrnMed, deletePrnMed, loadPrnDoses, addPrnDose, deletePrnDose,
 } from './db';
 
 // ─── Helpers ───────────────────────────────────────────────────────────
@@ -2047,12 +2048,20 @@ function SymptomsSheet({ data, onChange }) {
 }
 
 // ─── Medication Tab ────────────────────────────────────────────────────
-function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate, showToast }) {
+function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, setPrnMeds, prnDoses, setPrnDoses, currentDate, showToast }) {
   const [editMode, setEditMode] = useState(false);
   const [editingMed, setEditingMed] = useState(null);
   const [addingMed, setAddingMed] = useState(false);
   const [newMed, setNewMed] = useState({ name: '', doseMg: '', time: '08:00', group: 'Morning', active: true, foodInstruction: '', days: [] });
   const [takenSheet, setTakenSheet] = useState(null);
+  // PRN state
+  const [addingPrn, setAddingPrn] = useState(false);
+  const [newPrn, setNewPrn] = useState({ name: '', doseMg: '', note: '' });
+  const [editingPrn, setEditingPrn] = useState(null);
+  const [prnDoseSheet, setPrnDoseSheet] = useState(null);
+  const [showPrnDoses, setShowPrnDoses] = useState(false);
+  const amber = '#c9914a';
+  const amberLight = '#faf0e4';
 
   const groups = ['Morning', 'Afternoon', 'Evening', 'Bedtime'];
   const getEvent = (scheduleId) => events.find((e) => e.date === currentDate && e.scheduleId === scheduleId);
@@ -2145,6 +2154,72 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
     }
   };
 
+  // ─── PRN helpers ────────────────────────────────────
+  const saveNewPrn = async () => {
+    if (!newPrn.name) return;
+    try {
+      await savePrnMed({ ...newPrn, id: uid(), active: true });
+      setPrnMeds(await loadPrnMeds());
+      setNewPrn({ name: '', doseMg: '', note: '' });
+      setAddingPrn(false);
+      showToast('As-needed medication added');
+    } catch {
+      showToast('Failed to save — please try again');
+    }
+  };
+
+  const savePrnEdit = async () => {
+    if (!editingPrn) return;
+    try {
+      await savePrnMed(editingPrn);
+      setPrnMeds(await loadPrnMeds());
+      setEditingPrn(null);
+      showToast('Medication updated');
+    } catch {
+      showToast('Failed to save — please try again');
+    }
+  };
+
+  const removePrnMed = async (id) => {
+    try {
+      await deletePrnMed(id);
+      setPrnMeds(await loadPrnMeds());
+      setEditingPrn(null);
+      showToast('Medication removed');
+    } catch {
+      showToast('Failed to remove — please try again');
+    }
+  };
+
+  const openPrnDoseSheet = (med) => {
+    setPrnDoseSheet({ prnMedId: med.id, name: med.name, doseMg: med.doseMg || '', time: nowTime(), note: '' });
+  };
+
+  const savePrnDose = async () => {
+    if (!prnDoseSheet) return;
+    try {
+      await addPrnDose({ prnMedId: prnDoseSheet.prnMedId, date: currentDate, time: prnDoseSheet.time, doseMg: prnDoseSheet.doseMg, note: prnDoseSheet.note });
+      setPrnDoses(await loadPrnDoses(currentDate));
+      setPrnDoseSheet(null);
+      showToast('Dose logged');
+    } catch {
+      showToast('Failed to save — please try again');
+    }
+  };
+
+  const removePrnDose = async (id) => {
+    try {
+      await deletePrnDose(id);
+      setPrnDoses(await loadPrnDoses(currentDate));
+      showToast('Dose removed');
+    } catch {
+      showToast('Failed to remove — please try again');
+    }
+  };
+
+  const activePrnMeds = prnMeds.filter((m) => m.active);
+  const stoppedPrnMeds = prnMeds.filter((m) => !m.active);
+
   return (
     <div>
       <div className="flex justify-end mb-3">
@@ -2197,7 +2272,103 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
       })}
 
       {editMode && (
-        <button onClick={() => setAddingMed(true)} className="w-full py-3 rounded-2xl text-sm font-medium" style={{ background: ds.greenLight, color: ds.green }}>+ Add medication</button>
+        <button onClick={() => setAddingMed(true)} className="w-full py-3 rounded-2xl text-sm font-medium" style={{ background: ds.greenLight, color: ds.green }}>+ Add scheduled medication</button>
+      )}
+
+      {/* ─── As-needed (PRN) section ─── */}
+      <div className="mt-6 mb-5">
+        <div className="mb-2 px-1" style={{ ...tileLabel, color: amber }}>As needed</div>
+        {activePrnMeds.length === 0 && !editMode && (
+          <div className="text-center py-4 rounded-2xl" style={{ background: amberLight, color: amber, fontSize: 13 }}>
+            No as-needed medications yet. Tap Edit to add one.
+          </div>
+        )}
+        {activePrnMeds.length > 0 && (
+          <div className="rounded-2xl overflow-hidden" style={{ background: ds.card, boxShadow: ds.cardShadow }}>
+            {activePrnMeds.map((med, i) => {
+              const doses = prnDoses.filter((d) => d.prnMedId === med.id);
+              const count = doses.length;
+              const lastDose = doses.length ? doses.sort((a, b) => b.time.localeCompare(a.time))[0] : null;
+              return (
+                <div
+                  key={med.id}
+                  onClick={() => { if (editMode) setEditingPrn({ ...med }); else openPrnDoseSheet(med); }}
+                  className="flex items-center gap-3 px-4 py-3.5 cursor-pointer active:bg-gray-50"
+                  style={{ borderBottom: i < activePrnMeds.length - 1 ? `1px solid ${ds.divider}` : 'none' }}
+                >
+                  {!editMode ? (
+                    <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: count > 0 ? amber : ds.border }}>
+                      {count > 0 && <span className="text-white text-xs font-bold">{count}</span>}
+                    </div>
+                  ) : (
+                    <span style={{ color: ds.textPlaceholder }}>›</span>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div style={{ fontSize: 15, color: ds.text, fontWeight: 500 }}>{med.name}</div>
+                    <div style={{ fontSize: 12, color: ds.textLight }}>
+                      {med.doseMg ? `${med.doseMg} mg` : 'As needed'}
+                      {med.note && <span style={{ color: '#b0a090' }}> · {med.note}</span>}
+                    </div>
+                  </div>
+                  {!editMode && count > 0 && (
+                    <div style={{ fontSize: 12, color: amber, textAlign: 'right' }}>
+                      <div>{count}x today</div>
+                      {lastDose && <div style={{ color: ds.textLight }}>{formatTime(lastDose.time)}</div>}
+                    </div>
+                  )}
+                  {editMode && <span style={{ color: ds.textPlaceholder, fontSize: 18 }}>›</span>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {editMode && (
+          <button onClick={() => setAddingPrn(true)} className="w-full mt-2 py-3 rounded-2xl text-sm font-medium" style={{ background: amberLight, color: amber }}>+ Add as-needed medication</button>
+        )}
+        {editMode && stoppedPrnMeds.length > 0 && (
+          <div className="mt-4">
+            <div className="mb-2 px-1" style={{ ...tileLabel, color: '#a5a5a5' }}>Stopped as-needed</div>
+            <div className="rounded-2xl overflow-hidden" style={{ background: ds.card, boxShadow: ds.cardShadow, opacity: 0.7 }}>
+              {stoppedPrnMeds.map((med, i) => (
+                <div key={med.id} className="flex items-center gap-3 px-4 py-3.5" style={{ borderBottom: i < stoppedPrnMeds.length - 1 ? `1px solid ${ds.divider}` : 'none' }}>
+                  <div className="flex-1 min-w-0">
+                    <div style={{ fontSize: 15, color: ds.textMuted, fontWeight: 500 }}>{med.name}</div>
+                    <div style={{ fontSize: 12, color: ds.textLight }}>{med.doseMg ? `${med.doseMg} mg` : 'As needed'}</div>
+                  </div>
+                  <button onClick={async () => { await savePrnMed({ ...med, active: true }); setPrnMeds(await loadPrnMeds()); showToast('Medication restarted'); }} className="text-sm px-3 py-1.5 rounded-full font-medium" style={{ background: amberLight, color: amber }}>Restart</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ─── Today's as-needed doses ─── */}
+      {prnDoses.length > 0 && !editMode && (
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <div style={{ ...tileLabel, color: amber }}>Today's as-needed doses</div>
+            <button onClick={() => setShowPrnDoses(!showPrnDoses)} className="text-xs font-medium" style={{ color: amber }}>{showPrnDoses ? 'Hide' : 'Show'}</button>
+          </div>
+          {showPrnDoses && (
+            <div className="rounded-2xl overflow-hidden" style={{ background: ds.card, boxShadow: ds.cardShadow }}>
+              {[...prnDoses].sort((a, b) => a.time.localeCompare(b.time)).map((dose, i) => {
+                const med = prnMeds.find((m) => m.id === dose.prnMedId);
+                return (
+                  <div key={dose.id} className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: i < prnDoses.length - 1 ? `1px solid ${ds.divider}` : 'none' }}>
+                    <div style={{ fontSize: 12, color: amber, fontWeight: 600, minWidth: 52 }}>{formatTime(dose.time)}</div>
+                    <div className="flex-1 min-w-0">
+                      <div style={{ fontSize: 14, color: ds.text, fontWeight: 500 }}>{med ? med.name : 'Unknown'}</div>
+                      {dose.doseMg && <div style={{ fontSize: 12, color: ds.textLight }}>{dose.doseMg} mg</div>}
+                      {dose.note && <div style={{ fontSize: 12, color: ds.textLight }}>{dose.note}</div>}
+                    </div>
+                    <button onClick={() => { if (window.confirm('Remove this dose?')) removePrnDose(dose.id); }} style={{ fontSize: 16, color: ds.textPlaceholder, padding: 4 }}>×</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
 
       {editMode && (() => {
@@ -2306,6 +2477,39 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, currentDate
           </>
         )}
       </BottomSheet>
+
+      {/* PRN: Log dose sheet */}
+      <BottomSheet open={!!prnDoseSheet} onClose={() => setPrnDoseSheet(null)} title={prnDoseSheet ? prnDoseSheet.name : ''}>
+        {prnDoseSheet && (
+          <>
+            <Input label="Dose (mg)" value={prnDoseSheet.doseMg} onChange={(v) => setPrnDoseSheet({ ...prnDoseSheet, doseMg: v })} type="number" />
+            <Input label="Time" value={prnDoseSheet.time} onChange={(v) => setPrnDoseSheet({ ...prnDoseSheet, time: v })} type="time" />
+            <TextArea label="Note (optional)" value={prnDoseSheet.note} onChange={(v) => setPrnDoseSheet({ ...prnDoseSheet, note: v })} placeholder="e.g. headache, mild pain..." />
+            <button onClick={savePrnDose} className="w-full mt-2 py-3 rounded-2xl text-sm font-semibold" style={{ background: amber, color: '#fff' }}>Log dose</button>
+          </>
+        )}
+      </BottomSheet>
+
+      {/* PRN: Add new med */}
+      <BottomSheet open={addingPrn} onClose={() => setAddingPrn(false)} title="Add as-needed medication">
+        <Input label="Name" value={newPrn.name} onChange={(v) => setNewPrn({ ...newPrn, name: v })} placeholder="e.g. Paracetamol" />
+        <Input label="Default dose (mg)" value={newPrn.doseMg} onChange={(v) => setNewPrn({ ...newPrn, doseMg: v })} type="number" />
+        <TextArea label="Note (optional)" value={newPrn.note} onChange={(v) => setNewPrn({ ...newPrn, note: v })} placeholder="e.g. For pain" />
+        <button onClick={saveNewPrn} className="w-full mt-3 py-3 rounded-2xl text-sm font-semibold" style={{ background: amber, color: '#fff' }}>Save medication</button>
+      </BottomSheet>
+
+      {/* PRN: Edit med */}
+      <BottomSheet open={!!editingPrn} onClose={savePrnEdit} title="Edit as-needed medication">
+        {editingPrn && (
+          <>
+            <Input label="Name" value={editingPrn.name} onChange={(v) => setEditingPrn({ ...editingPrn, name: v })} />
+            <Input label="Default dose (mg)" value={editingPrn.doseMg} onChange={(v) => setEditingPrn({ ...editingPrn, doseMg: v })} type="number" />
+            <TextArea label="Note (optional)" value={editingPrn.note || ''} onChange={(v) => setEditingPrn({ ...editingPrn, note: v })} placeholder="e.g. For pain" />
+            <button onClick={() => { if (window.confirm('Stop this medication?')) { savePrnMed({ ...editingPrn, active: false }).then(() => loadPrnMeds()).then((m) => { setPrnMeds(m); setEditingPrn(null); showToast('Medication stopped'); }); } }} className="w-full mt-4 py-3 rounded-2xl text-sm" style={{ background: '#fce8e8', color: '#c97070' }}>Stop medication</button>
+            <button onClick={() => { if (window.confirm('Remove this medication permanently?')) removePrnMed(editingPrn.id); }} className="w-full mt-2 py-3 rounded-2xl text-sm" style={{ background: '#fce8e8', color: '#c97070' }}>Remove permanently</button>
+          </>
+        )}
+      </BottomSheet>
     </div>
   );
 }
@@ -2319,6 +2523,8 @@ export default function App() {
   const [isDayEmpty, setIsDayEmpty] = useState(true);
   const [schedules, setSchedules] = useState([]);
   const [medEvents, setMedEvents] = useState([]);
+  const [prnMeds, setPrnMeds] = useState([]);
+  const [prnDoses, setPrnDoses] = useState([]);
   const [activeSheet, setActiveSheet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [toastMsg, setToastMsg] = useState('');
@@ -2346,16 +2552,20 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const [day, scheds, evts] = await Promise.all([
+      const [day, scheds, evts, prns, prnD] = await Promise.all([
         loadDay(currentDate),
         loadSchedules(),
         loadMedEvents(currentDate),
+        loadPrnMeds(),
+        loadPrnDoses(currentDate),
       ]);
       if (cancelled) return;
       setDayData(day || emptyDay());
       setIsDayEmpty(!day);
       setSchedules(scheds);
       setMedEvents(evts);
+      setPrnMeds(prns);
+      setPrnDoses(prnD);
       setLoading(false);
     }
     load();
@@ -2421,15 +2631,19 @@ export default function App() {
       if (!window.confirm('Restore from this backup? This will replace all current data.')) return;
       await importAllData(data);
       // Reload current state
-      const [day, scheds, evts] = await Promise.all([
+      const [day, scheds, evts, prns, prnD] = await Promise.all([
         loadDay(currentDate),
         loadSchedules(),
         loadMedEvents(currentDate),
+        loadPrnMeds(),
+        loadPrnDoses(currentDate),
       ]);
       setDayData(day || emptyDay());
       setIsDayEmpty(!day);
       setSchedules(scheds);
       setMedEvents(evts);
+      setPrnMeds(prns);
+      setPrnDoses(prnD);
       setProfileKey((k) => k + 1);
       showToast('Backup restored');
     } catch {
@@ -2573,7 +2787,7 @@ export default function App() {
                 <SymptomsTile data={dayData.symptoms} onClick={() => setActiveSheet('symptoms')} />
               </div>
             ) : (
-              <MedicationTab schedules={schedules} setSchedules={setSchedules} events={medEvents} setEvents={setMedEvents} currentDate={currentDate} showToast={showToast} />
+              <MedicationTab schedules={schedules} setSchedules={setSchedules} events={medEvents} setEvents={setMedEvents} prnMeds={prnMeds} setPrnMeds={setPrnMeds} prnDoses={prnDoses} setPrnDoses={setPrnDoses} currentDate={currentDate} showToast={showToast} />
             )}
           </div>
 

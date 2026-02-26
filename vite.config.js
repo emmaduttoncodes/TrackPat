@@ -8,10 +8,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon-192.png', 'icon-512.png'],
+      includeAssets: ['icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon-32.png', 'favicon-16.png'],
       manifest: {
-        name: 'TrackPat',
-        short_name: 'TrackPat',
+        name: 'Renew',
+        short_name: 'Renew',
         description: 'A calm recovery tracking app',
         theme_color: '#8fae8b',
         background_color: '#f7f6f2',

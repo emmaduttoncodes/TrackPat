@@ -1,8 +1,8 @@
-# TrackPat
+# Renew
 
 A calm, offline-first post-transplant recovery tracker. Built as an installable PWA with local IndexedDB storage — your data never leaves your device.
 
-> **Disclaimer:** TrackPat is a personal tracking aid — it does not replace medical advice. Always follow your transplant team's guidance and contact them if you have concerns.
+> **Disclaimer:** Renew is a personal tracking aid — it does not replace medical advice. Always follow your transplant team's guidance and contact them if you have concerns.
 
 ## Features
 

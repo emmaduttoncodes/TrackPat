@@ -6,6 +6,7 @@ import { ds } from './styles';
 import { FoodSafetyView } from './profile/FoodSafetyView';
 import { ClinicAppointmentsView } from './profile/ClinicAppointments';
 import { SettingsView } from './profile/SettingsView';
+import { track } from './analytics';
 
 export function ProfilePage({ onExport, onImport, showToast }) {
   const [transplantDate, setTransplantDate] = useState('');
@@ -122,7 +123,7 @@ export function ProfilePage({ onExport, onImport, showToast }) {
       <div style={{ padding: '24px 20px', position: 'relative' }}>
         {/* Settings cog */}
         <button
-          onClick={() => setShowSettings(true)}
+          onClick={() => { setShowSettings(true); track('settings_opened'); }}
           style={{
             position: 'absolute', top: 24, right: 20, background: 'none', border: 'none',
             cursor: 'pointer', padding: 4, zIndex: 1,
@@ -208,7 +209,7 @@ export function ProfilePage({ onExport, onImport, showToast }) {
           Health reference
         </div>
         <div
-          onClick={() => setShowFoodSafety(true)}
+          onClick={() => { setShowFoodSafety(true); track('food_safety_opened'); }}
           style={{
             background: ds.card, borderRadius: ds.radiusLg, padding: '14px 16px',
             boxShadow: ds.cardShadow, border: ds.cardBorder, marginBottom: 16,

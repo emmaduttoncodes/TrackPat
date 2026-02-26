@@ -236,6 +236,7 @@ export function ClinicAppointmentsView({ appointments, onSave, onClose, allDays,
     const updated = [...appointments, newAppt];
     onSave(updated);
     setSelectedAppt(newAppt);
+    track('clinic_appointment_added');
   };
 
   const saveAppointment = (appt) => {
@@ -311,7 +312,7 @@ export function ClinicAppointmentsView({ appointments, onSave, onClose, allDays,
           return (
             <div
               key={appt.id}
-              onClick={() => setSelectedAppt(appt)}
+              onClick={() => { setSelectedAppt(appt); track('clinic_appointment_viewed'); }}
               style={{
                 background: ds.card, borderRadius: ds.radiusLg, padding: '14px 16px',
                 boxShadow: ds.cardShadow, border: ds.cardBorder, marginBottom: 10,

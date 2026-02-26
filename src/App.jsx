@@ -102,6 +102,7 @@ export default function App() {
       const updated = { ...prev, [section]: value };
       saveDay(currentDate, updated).catch(() => showToast('Failed to save — please try again'));
       setIsDayEmpty(false);
+      track('overview_' + section);
       return updated;
     });
   }, [currentDate, showToast]);
@@ -265,7 +266,7 @@ export default function App() {
               {['overview', 'medication'].map((t) => (
                 <button
                   key={t}
-                  onClick={() => setTab(t)}
+                  onClick={() => { setTab(t); track('tab_' + t); }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
                   style={{ background: tab === t ? ds.card : 'transparent', color: tab === t ? ds.text : ds.textLight, boxShadow: tab === t ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}
                 >{t === 'overview' ? 'Overview' : 'Medication'}</button>

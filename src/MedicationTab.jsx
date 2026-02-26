@@ -6,6 +6,7 @@ import {
 import { getDayName, DAY_NAMES, formatTime, nowTime, uid } from './helpers';
 import { ds, inputStyle, tileLabel } from './styles';
 import { BottomSheet, Field, Input, TextArea } from './ui';
+import { track } from './analytics';
 
 export function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, setPrnMeds, prnDoses, setPrnDoses, currentDate, showToast, isClinicDay }) {
   const [editMode, setEditMode] = useState(false);
@@ -39,6 +40,7 @@ export function MedicationTab({ schedules, setSchedules, events, setEvents, prnM
       setEvents(updated);
       setTakenSheet(null);
       showToast('Medication logged');
+      track('medication_logged');
     } catch {
       showToast('Failed to save — please try again');
     }
@@ -158,6 +160,7 @@ export function MedicationTab({ schedules, setSchedules, events, setEvents, prnM
       setPrnDoses(await loadPrnDoses(currentDate));
       setPrnDoseSheet(null);
       showToast('Dose logged');
+      track('prn_dose_logged');
     } catch {
       showToast('Failed to save — please try again');
     }

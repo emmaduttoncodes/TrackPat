@@ -127,6 +127,10 @@ const ds = {
   greenLight: '#e8f0e8',  // green tinted backgrounds
   greenCheck: '#7fb685',  // checkmarks, success indicators
   greenSage: '#8fae8b',   // tile labels (vitals, symptoms ok)
+  // Warning/attention
+  amber: '#c9914a',        // warning text, clinic day highlights
+  amberLight: 'rgba(212,165,116,0.08)', // subtle amber background tint
+  amberGradient: 'linear-gradient(135deg, #d4a574 0%, #c9914a 100%)', // attention banners
   // Text
   text: '#3d3d3d',
   textMuted: '#7a7a7a',
@@ -1080,7 +1084,7 @@ function FoodSafetyView({ transplantDate, onClose }) {
         {/* Status banner */}
         <div style={{
           background: showTemporary
-            ? 'linear-gradient(135deg, #d4a574 0%, #c9914a 100%)'
+            ? ds.amberGradient
             : 'linear-gradient(135deg, #8fae8b 0%, #a3c4a0 40%, #90c5b0 100%)',
           borderRadius: ds.radiusLg, padding: '16px 20px', marginBottom: 20,
         }}>
@@ -2048,7 +2052,7 @@ function SymptomsSheet({ data, onChange }) {
 }
 
 // ─── Medication Tab ────────────────────────────────────────────────────
-function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, setPrnMeds, prnDoses, setPrnDoses, currentDate, showToast }) {
+function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, setPrnMeds, prnDoses, setPrnDoses, currentDate, showToast, isClinicDay }) {
   const [editMode, setEditMode] = useState(false);
   const [editingMed, setEditingMed] = useState(null);
   const [addingMed, setAddingMed] = useState(false);
@@ -2225,6 +2229,17 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, se
         </button>
       </div>
 
+      {isClinicDay && schedules.some(s => s.name.toLowerCase() === 'tacrolimus' && s.active) && (
+        <div style={{ background: ds.amberGradient, borderRadius: ds.radiusLg, padding: '16px 20px', marginBottom: 16 }}>
+          <div style={{ color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
+            Clinic day — hold Tacrolimus
+          </div>
+          <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, marginTop: 4, fontFamily: "'DM Sans', sans-serif" }}>
+            Don't take Tacrolimus before your appointment. Bring it with you and take it after your blood test.
+          </div>
+        </div>
+      )}
+
       {groups.map((group) => {
         const dayName = getDayName(currentDate);
         const meds = schedules.filter((s) => s.group === group && s.active && (!s.days || s.days.length === 0 || s.days.includes(dayName))).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
@@ -2235,12 +2250,13 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, se
             <div className="rounded-2xl overflow-hidden" style={{ background: ds.card, boxShadow: ds.cardShadow }}>
               {meds.map((med, i) => {
                 const ev = getEvent(med.id);
+                const isTacOnClinic = isClinicDay && med.name.toLowerCase() === 'tacrolimus';
                 return (
                   <div
                     key={med.id}
                     onClick={() => { if (editMode) setEditingMed({ ...med }); else openTakenSheet(med); }}
                     className="flex items-center gap-3 px-4 py-3.5 cursor-pointer active:bg-gray-50"
-                    style={{ borderBottom: i < meds.length - 1 ? `1px solid ${ds.divider}` : 'none' }}
+                    style={{ borderBottom: i < meds.length - 1 ? `1px solid ${ds.divider}` : 'none', background: isTacOnClinic ? ds.amberLight : undefined }}
                   >
                     {!editMode ? (
                       <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: ev ? ds.greenCheck : ds.border }}>
@@ -2256,6 +2272,7 @@ function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, se
                         {med.days && med.days.length > 0 && <span style={{ color: '#9b8bb4' }}> · {med.days.join(', ')}</span>}
                         {med.foodInstruction === 'before' && <span style={{ color: '#c9a87a' }}> · Before food</span>}
                         {med.foodInstruction === 'with' && <span style={{ color: '#8b9cc7' }}> · With food</span>}
+                        {isTacOnClinic && <span style={{ color: ds.amber }}> · Take after clinic</span>}
                       </div>
                     </div>
                     {ev && !editMode && <div style={{ fontSize: 12, color: ds.greenCheck }}>✓ Taken {ev.takenAt}</div>}
@@ -2522,6 +2539,7 @@ export default function App() {
   const [medEvents, setMedEvents] = useState([]);
   const [prnMeds, setPrnMeds] = useState([]);
   const [prnDoses, setPrnDoses] = useState([]);
+  const [clinicAppts, setClinicAppts] = useState([]);
   const [activeSheet, setActiveSheet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [toastMsg, setToastMsg] = useState('');
@@ -2549,12 +2567,13 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const [day, scheds, evts, prns, prnD] = await Promise.all([
+      const [day, scheds, evts, prns, prnD, appts] = await Promise.all([
         loadDay(currentDate),
         loadSchedules(),
         loadMedEvents(currentDate),
         loadPrnMeds(),
         loadPrnDoses(currentDate),
+        loadSetting('clinicAppointments'),
       ]);
       if (cancelled) return;
       setDayData(day || emptyDay());
@@ -2563,6 +2582,7 @@ export default function App() {
       setMedEvents(evts);
       setPrnMeds(prns);
       setPrnDoses(prnD);
+      setClinicAppts(appts || []);
       setLoading(false);
     }
     load();
@@ -2596,6 +2616,9 @@ export default function App() {
       return updated;
     });
   }, [currentDate, showToast]);
+
+  const isClinicDay = (clinicAppts || []).some(a => a.date === currentDate);
+  const hasTacrolimus = schedules.some(s => s.name.toLowerCase() === 'tacrolimus' && s.active);
 
   const canGoForward = currentDate < todayStr();
 
@@ -2755,6 +2778,16 @@ export default function App() {
           <div className="px-5 py-4">
             {tab === 'overview' ? (
               <div className="flex flex-col gap-3">
+                {isClinicDay && hasTacrolimus && (
+                  <div style={{ background: ds.amberGradient, borderRadius: ds.radiusLg, padding: '16px 20px' }}>
+                    <div style={{ color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
+                      Clinic day — hold Tacrolimus
+                    </div>
+                    <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, marginTop: 4, fontFamily: "'DM Sans', sans-serif" }}>
+                      Don't take Tacrolimus before your appointment. Bring it with you and take it after your blood test.
+                    </div>
+                  </div>
+                )}
                 {isDayEmpty && (
                   <div className="text-center py-2 px-4 rounded-2xl" style={{ background: 'rgba(143,174,139,0.08)', color: ds.greenSage, fontSize: 13 }}>
                     Tap any card to start recording
@@ -2784,7 +2817,7 @@ export default function App() {
                 <SymptomsTile data={dayData.symptoms} onClick={() => setActiveSheet('symptoms')} />
               </div>
             ) : (
-              <MedicationTab schedules={schedules} setSchedules={setSchedules} events={medEvents} setEvents={setMedEvents} prnMeds={prnMeds} setPrnMeds={setPrnMeds} prnDoses={prnDoses} setPrnDoses={setPrnDoses} currentDate={currentDate} showToast={showToast} />
+              <MedicationTab schedules={schedules} setSchedules={setSchedules} events={medEvents} setEvents={setMedEvents} prnMeds={prnMeds} setPrnMeds={setPrnMeds} prnDoses={prnDoses} setPrnDoses={setPrnDoses} currentDate={currentDate} showToast={showToast} isClinicDay={isClinicDay} />
             )}
           </div>
 

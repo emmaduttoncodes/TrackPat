@@ -184,6 +184,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen" style={{ background: ds.bg, fontFamily: "'DM Sans', sans-serif", overflowX: 'hidden' }}>
+    <div style={{ maxWidth: ds.appMaxWidth, margin: '0 auto' }}>
       <Toast message={toastMsg} />
 
       {showOnboarding && (
@@ -337,6 +338,7 @@ export default function App() {
       <div style={{ height: 72 }} />
 
       <BottomNav page={page} setPage={(p) => { if (p === 'overview') setCurrentDate(todayStr()); setPage(p); track('tab_' + p); }} />
+    </div>
     </div>
   );
 }

@@ -11,7 +11,7 @@ export function FoodSafetyView({ transplantDate, onClose }) {
   if (waiterMode) {
     return (
       <div className="fixed inset-0 z-50" style={{ background: ds.card, overflowY: 'auto', overflowX: 'hidden' }}>
-        <div style={{ padding: '48px 24px 120px', maxWidth: 480, margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ padding: '48px 24px 120px', maxWidth: ds.appMaxWidth, margin: '0 auto', textAlign: 'center' }}>
           <h1 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 28, fontWeight: 700, color: ds.text, marginBottom: 8 }}>
             I cannot eat these foods
           </h1>
@@ -57,6 +57,7 @@ export function FoodSafetyView({ transplantDate, onClose }) {
           paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
           background: 'linear-gradient(transparent, white 20%)',
         }}>
+          <div style={{ maxWidth: ds.appMaxWidth, margin: '0 auto' }}>
           <button
             onClick={() => setWaiterMode(false)}
             style={{
@@ -65,6 +66,7 @@ export function FoodSafetyView({ transplantDate, onClose }) {
               cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
             }}
           >Done</button>
+          </div>
         </div>
       </div>
     );
@@ -72,7 +74,7 @@ export function FoodSafetyView({ transplantDate, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50" style={{ background: ds.bg, overflowY: 'auto', overflowX: 'hidden' }}>
-      <div style={{ padding: '24px 20px 120px', paddingTop: 'calc(24px + env(safe-area-inset-top))' }}>
+      <div style={{ padding: '24px 20px 120px', paddingTop: 'calc(24px + env(safe-area-inset-top))', maxWidth: ds.appMaxWidth, margin: '0 auto' }}>
         {/* Header */}
         <div className="flex items-center gap-3" style={{ marginBottom: 20 }}>
           <button
@@ -178,6 +180,7 @@ export function FoodSafetyView({ transplantDate, onClose }) {
         paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
         background: `linear-gradient(transparent, ${ds.bg} 20%)`,
       }}>
+        <div style={{ maxWidth: ds.appMaxWidth, margin: '0 auto' }}>
         <button
           onClick={() => { setWaiterMode(true); track('waiter_mode_opened'); }}
           style={{
@@ -186,6 +189,7 @@ export function FoodSafetyView({ transplantDate, onClose }) {
             cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
           }}
         >Show to waiter</button>
+        </div>
       </div>
     </div>
   );

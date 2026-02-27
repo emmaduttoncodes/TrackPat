@@ -120,7 +120,7 @@ export function ProfilePage({ onExport, onImport, showToast }) {
 
   return (
     <div style={{ paddingTop: 'env(safe-area-inset-top)', background: ds.bg, minHeight: '100vh' }}>
-      <div style={{ padding: '24px 20px', position: 'relative' }}>
+      <div style={{ padding: '24px 20px', position: 'relative', maxWidth: ds.appMaxWidth, margin: '0 auto' }}>
         {/* Settings cog */}
         <button
           onClick={() => { setShowSettings(true); track('settings_opened'); }}

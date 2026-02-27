@@ -35,5 +35,17 @@ export default defineConfig({
         defaultBrowserType: 'chromium',
       },
     },
+    {
+      name: 'iPad Pro 11',
+      use: { ...devices['iPad Pro 11'] },
+    },
+    {
+      name: 'Desktop 1280',
+      use: { viewport: { width: 1280, height: 720 } },
+    },
+    {
+      name: 'Desktop 1920',
+      use: { viewport: { width: 1920, height: 1080 } },
+    },
   ],
 });

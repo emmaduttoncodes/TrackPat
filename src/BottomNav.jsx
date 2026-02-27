@@ -25,7 +25,7 @@ export function BottomNav({ page, setPage }) {
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
-      <div style={{ display: 'flex', height: 56 }}>
+      <div style={{ display: 'flex', height: 56, maxWidth: ds.appMaxWidth, margin: '0 auto' }}>
         {items.map((item) => {
           const active = page === item.id;
           return (

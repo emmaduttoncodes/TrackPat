@@ -3,7 +3,7 @@ import { ds, inputStyle, labelStyle } from '../styles';
 export function SettingsView({ transplantDate, onDateChange, onExport, onImport, fileInputRef, onClose }) {
   return (
     <div className="fixed inset-0 z-50" style={{ background: ds.bg, overflowY: 'auto', overflowX: 'hidden' }}>
-      <div style={{ padding: '24px 20px 120px', paddingTop: 'calc(24px + env(safe-area-inset-top))' }}>
+      <div style={{ padding: '24px 20px 120px', paddingTop: 'calc(24px + env(safe-area-inset-top))', maxWidth: ds.appMaxWidth, margin: '0 auto' }}>
         {/* Header */}
         <div className="flex items-center gap-3" style={{ marginBottom: 20 }}>
           <button

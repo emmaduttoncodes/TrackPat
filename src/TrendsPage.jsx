@@ -117,7 +117,7 @@ export function TrendsPage() {
 
   return (
     <div style={{ paddingTop: 'env(safe-area-inset-top)', background: ds.bg, minHeight: '100vh' }}>
-      <div style={{ padding: '24px 20px' }}>
+      <div style={{ padding: '24px 20px', maxWidth: ds.appMaxWidth, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: ds.text, margin: 0 }}>Trends</h2>
           {hasAny ? (

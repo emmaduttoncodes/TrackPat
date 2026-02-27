@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('No horizontal overflow on any page', () => {
 
   test('overview page has no horizontal overflow', async ({ page }) => {
-    await page.goto('/TrackPat/');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     // Dismiss onboarding if shown
@@ -21,7 +21,7 @@ test.describe('No horizontal overflow on any page', () => {
   });
 
   test('profile page has no horizontal overflow', async ({ page }) => {
-    await page.goto('/TrackPat/');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     // Dismiss onboarding if shown
@@ -42,7 +42,7 @@ test.describe('No horizontal overflow on any page', () => {
   });
 
   test('clinic appointments view has no horizontal overflow', async ({ page }) => {
-    await page.goto('/TrackPat/');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     // Dismiss onboarding if shown
@@ -80,7 +80,7 @@ test.describe('No horizontal overflow on any page', () => {
   });
 
   test('food safety view has no horizontal overflow', async ({ page }) => {
-    await page.goto('/TrackPat/');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     // Dismiss onboarding if shown
@@ -103,7 +103,7 @@ test.describe('No horizontal overflow on any page', () => {
   });
 
   test('trends page has no horizontal overflow', async ({ page }) => {
-    await page.goto('/TrackPat/');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     // Dismiss onboarding if shown
@@ -124,7 +124,7 @@ test.describe('No horizontal overflow on any page', () => {
   });
 
   test('medication tab has no horizontal overflow', async ({ page }) => {
-    await page.goto('/TrackPat/');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     // Dismiss onboarding if shown
@@ -145,7 +145,7 @@ test.describe('No horizontal overflow on any page', () => {
   });
 
   test('settings view has no horizontal overflow', async ({ page }) => {
-    await page.goto('/TrackPat/');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     // Dismiss onboarding if shown
@@ -168,7 +168,7 @@ test.describe('No horizontal overflow on any page', () => {
   });
 
   test('all content stays within viewport bounds', async ({ page }) => {
-    await page.goto('/TrackPat/');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     // Dismiss onboarding if shown

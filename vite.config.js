@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  base: '/TrackPat/',
+  base: '/',
   plugins: [
     react(),
     VitePWA({
@@ -17,8 +17,8 @@ export default defineConfig({
         background_color: '#f7f6f2',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/TrackPat/',
-        scope: '/TrackPat/',
+        start_url: '/',
+        scope: '/',
         icons: [
           {
             src: 'icon-192.png',

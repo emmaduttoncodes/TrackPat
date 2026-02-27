@@ -10,7 +10,7 @@ export function FoodSafetyView({ transplantDate, onClose }) {
 
   if (waiterMode) {
     return (
-      <div className="fixed inset-0 z-50" style={{ background: ds.card, overflowY: 'auto' }}>
+      <div className="fixed inset-0 z-50" style={{ background: ds.card, overflowY: 'auto', overflowX: 'hidden' }}>
         <div style={{ padding: '48px 24px 120px', maxWidth: 480, margin: '0 auto', textAlign: 'center' }}>
           <h1 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 28, fontWeight: 700, color: ds.text, marginBottom: 8 }}>
             I cannot eat these foods
@@ -71,7 +71,7 @@ export function FoodSafetyView({ transplantDate, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50" style={{ background: ds.bg, overflowY: 'auto' }}>
+    <div className="fixed inset-0 z-50" style={{ background: ds.bg, overflowY: 'auto', overflowX: 'hidden' }}>
       <div style={{ padding: '24px 20px 120px', paddingTop: 'calc(24px + env(safe-area-inset-top))' }}>
         {/* Header */}
         <div className="flex items-center gap-3" style={{ marginBottom: 20 }}>

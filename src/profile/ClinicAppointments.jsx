@@ -99,7 +99,7 @@ function ClinicAppointmentDetail({ appointment, onSave, onDelete, onClose, allAp
   }, [date, time, questions, notes]);
 
   return (
-    <div className="fixed inset-0 z-50" style={{ background: ds.bg, overflowY: 'auto' }}>
+    <div className="fixed inset-0 z-50" style={{ background: ds.bg, overflowY: 'auto', overflowX: 'hidden' }}>
       <div style={{ padding: '24px 20px 120px', paddingTop: 'calc(24px + env(safe-area-inset-top))' }}>
         {/* Header */}
         <div className="flex items-center gap-3" style={{ marginBottom: 20 }}>
@@ -112,12 +112,12 @@ function ClinicAppointmentDetail({ appointment, onSave, onDelete, onClose, allAp
               fontSize: 18, cursor: 'pointer', flexShrink: 0,
             }}
           >‹</button>
-          <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: ds.text, margin: 0, flex: 1 }}>
+          <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: ds.text, margin: 0, flex: 1, minWidth: 0 }}>
             {date ? formatDate(date) : 'New appointment'}
           </h2>
           <button
             onClick={() => { onDelete(appointment.id); onClose(); }}
-            style={{ fontSize: 13, color: '#c97070', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
+            style={{ fontSize: 13, color: '#c97070', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", flexShrink: 0 }}
           >Delete</button>
         </div>
 
@@ -268,7 +268,7 @@ export function ClinicAppointmentsView({ appointments, onSave, onClose, allDays,
   const today = todayStr();
 
   return (
-    <div className="fixed inset-0 z-50" style={{ background: ds.bg, overflowY: 'auto' }}>
+    <div className="fixed inset-0 z-50" style={{ background: ds.bg, overflowY: 'auto', overflowX: 'hidden' }}>
       <div style={{ padding: '24px 20px 120px', paddingTop: 'calc(24px + env(safe-area-inset-top))' }}>
         {/* Header */}
         <div className="flex items-center gap-3" style={{ marginBottom: 20 }}>
@@ -281,14 +281,14 @@ export function ClinicAppointmentsView({ appointments, onSave, onClose, allDays,
               fontSize: 18, cursor: 'pointer', flexShrink: 0,
             }}
           >‹</button>
-          <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: ds.text, margin: 0, flex: 1 }}>
+          <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 600, color: ds.text, margin: 0, flex: 1, minWidth: 0 }}>
             Clinic appointments
           </h2>
           <button
             onClick={addAppointment}
             style={{
               fontSize: 14, color: ds.green, background: 'none', border: 'none',
-              cursor: 'pointer', fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
+              cursor: 'pointer', fontWeight: 600, fontFamily: "'DM Sans', sans-serif", flexShrink: 0,
             }}
           >+ Add</button>
         </div>

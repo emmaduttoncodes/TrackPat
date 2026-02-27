@@ -183,7 +183,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: ds.bg, fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="min-h-screen" style={{ background: ds.bg, fontFamily: "'DM Sans', sans-serif", overflowX: 'hidden' }}>
       <Toast message={toastMsg} />
 
       {showOnboarding && (

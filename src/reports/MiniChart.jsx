@@ -87,7 +87,7 @@ export function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
       <svg
         ref={svgRef}
         viewBox={`0 -4 ${W} ${H + 4}`}
-        style={{ width: '100%', height: 'auto', overflow: 'visible' }}
+        style={{ width: '100%', height: 'auto', overflow: 'hidden' }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}

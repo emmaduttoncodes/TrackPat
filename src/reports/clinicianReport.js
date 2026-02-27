@@ -208,7 +208,7 @@ tbody tr:last-child td{border-bottom:none}
   </table>
 
   <div class="footer">
-    This report was generated from patient-reported data collected via Renew. It is intended to support clinical discussion and should not replace clinical assessment.
+    This report was generated from patient-reported data collected via Transplant Track. It is intended to support clinical discussion and should not replace clinical assessment.
   </div>
 </div>
 </body>

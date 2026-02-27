@@ -82,7 +82,7 @@ export function SettingsView({ transplantDate, onDateChange, onExport, onImport,
           boxShadow: ds.cardShadow, border: ds.cardBorder,
         }}>
           <p style={{ fontSize: 13, color: ds.text, lineHeight: 1.6, margin: '0 0 12px', fontFamily: "'DM Sans', sans-serif" }}>
-            Renew was made with love to support my partner after his liver transplant. It started as a simple way to keep on top of daily recovery — and grew into something we hope might help others too.
+            Transplant Track was made with love to support my partner after his liver transplant. It started as a simple way to keep on top of daily recovery — and grew into something we hope might help others too.
           </p>
           <p style={{ fontSize: 12, color: ds.textMuted, lineHeight: 1.6, margin: '0 0 12px', fontFamily: "'DM Sans', sans-serif" }}>
             This app is designed to support your recovery journey, not to replace medical advice. It is not a diagnostic tool — always follow your transplant team's guidance and contact them with any concerns.

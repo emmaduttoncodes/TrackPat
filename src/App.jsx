@@ -191,7 +191,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: ds.bg }}>
           <div style={{ width: '100%', maxWidth: 380, padding: '0 24px' }}>
             <div style={{ textAlign: 'center', marginBottom: 32 }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>🌱</div>
+              <img src="/logo.png" alt="Transplant Log" style={{ width: 64, height: 64, marginBottom: 12 }} />
               <h1 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 26, fontWeight: 700, color: ds.text, margin: '0 0 8px', whiteSpace: 'nowrap' }}>Welcome to Transplant Log</h1>
               <p style={{ fontSize: 14, color: ds.textMuted, lineHeight: 1.5, margin: 0 }}>
                 A simple daily log to support your recovery journey after transplant.

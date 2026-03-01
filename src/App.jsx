@@ -6,7 +6,7 @@ import {
 } from './db';
 import { todayStr, formatDate, addDays, getEncouragement } from './helpers';
 import { ds } from './styles';
-import { Toast, BottomSheet, Field } from './ui';
+import { Toast, BottomSheet, Field, NudgeCard } from './ui';
 import { BottomNav } from './BottomNav';
 import { VitalsTile, MoodTile, SleepTile, PainTile, ActivityTile, SmallTile, SymptomsTile } from './tiles';
 import { VitalsSheet, PainSheet, ActivitySheet, SleepSheet, AppetiteSheet, MoodSheet, BowelSheet, SymptomsSheet } from './sheets';
@@ -15,6 +15,7 @@ import { TrendsPage } from './TrendsPage';
 import { ProfilePage } from './ProfilePage';
 import { inputStyle } from './styles';
 import { track } from './analytics';
+import { Heart } from 'lucide-react';
 
 // ─── Main App ──────────────────────────────────────────────────────────
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingName, setOnboardingName] = useState('');
   const [onboardingDate, setOnboardingDate] = useState('');
+  const [nudgesCompleted, setNudgesCompleted] = useState(null);
 
   const toastTimer = useRef(null);
 
@@ -77,10 +79,13 @@ export default function App() {
     return () => { cancelled = true; };
   }, [currentDate]);
 
-  // Check for first-time user → show onboarding
+  // Check for first-time user → show onboarding; load nudge state
   useEffect(() => {
     loadSetting('userName').then((name) => {
       if (!name) setShowOnboarding(true);
+    });
+    loadSetting('nudgesCompleted').then((val) => {
+      if (val) setNudgesCompleted(val);
     });
   }, []);
 
@@ -89,12 +94,29 @@ export default function App() {
     try {
       await saveSetting('userName', trimmed);
       if (onboardingDate) await saveSetting('transplantDate', onboardingDate);
+      await saveSetting('nudgesCompleted', []);
+      setNudgesCompleted([]);
       setShowOnboarding(false);
       track('onboarding_completed');
     } catch {
       showToast('Failed to save — please try again');
     }
   };
+
+  const nudgeSequence = ['nudge_track', 'nudge_meds', 'nudge_clinic'];
+  const activeNudge = nudgesCompleted != null
+    ? nudgeSequence.find((id) => !nudgesCompleted.includes(id)) || null
+    : null;
+
+  const completeNudge = useCallback((id) => {
+    setNudgesCompleted((prev) => {
+      if (!prev || prev.includes(id)) return prev;
+      const next = [...prev, id];
+      saveSetting('nudgesCompleted', next);
+      track('nudge_completed', { nudge: id });
+      return next;
+    });
+  }, []);
 
   // Auto-save day data to IndexedDB
   const updateDay = useCallback((section, value) => {
@@ -105,7 +127,8 @@ export default function App() {
       track('overview_' + section);
       return updated;
     });
-  }, [currentDate, showToast]);
+    if (activeNudge === 'nudge_track') completeNudge('nudge_track');
+  }, [currentDate, showToast, activeNudge, completeNudge]);
 
   const isClinicDay = (clinicAppts || []).some(a => a.date === currentDate);
   const hasTacrolimus = schedules.some(s => s.name.toLowerCase() === 'tacrolimus' && s.active);
@@ -191,7 +214,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: ds.bg }}>
           <div style={{ width: '100%', maxWidth: 380, padding: '0 24px' }}>
             <div style={{ textAlign: 'center', marginBottom: 32 }}>
-              <img src="/logo.png" alt="Transplant Log" style={{ width: 64, height: 64, marginBottom: 12 }} />
+              <img src="/logo.png" alt="Transplant Log" style={{ width: 80, height: 80, marginBottom: 12, display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
               <h1 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 26, fontWeight: 700, color: ds.text, margin: '0 0 8px' }}>Welcome to <span style={{ whiteSpace: 'nowrap' }}>Transplant Log</span></h1>
               <p style={{ fontSize: 14, color: ds.textMuted, lineHeight: 1.5, margin: 0 }}>
                 A simple daily log to support your recovery journey after transplant.
@@ -294,6 +317,11 @@ export default function App() {
                     Tap any card to start recording
                   </div>
                 )}
+                {activeNudge === 'nudge_track' && (
+                  <NudgeCard icon={Heart} title="Start by logging how you feel" onDismiss={() => completeNudge('nudge_track')}>
+                    Tap any card below to record your first entry. It only takes a moment.
+                  </NudgeCard>
+                )}
                 <VitalsTile data={dayData.vitals} onClick={() => setActiveSheet('vitals')} />
                 <div className="grid grid-cols-2 gap-3">
                   <MoodTile data={dayData.mood} onClick={() => setActiveSheet('mood')} />
@@ -318,7 +346,7 @@ export default function App() {
                 <SymptomsTile data={dayData.symptoms} onClick={() => setActiveSheet('symptoms')} />
               </div>
             ) : (
-              <MedicationTab schedules={schedules} setSchedules={setSchedules} events={medEvents} setEvents={setMedEvents} prnMeds={prnMeds} setPrnMeds={setPrnMeds} prnDoses={prnDoses} setPrnDoses={setPrnDoses} currentDate={currentDate} showToast={showToast} isClinicDay={isClinicDay} />
+              <MedicationTab schedules={schedules} setSchedules={setSchedules} events={medEvents} setEvents={setMedEvents} prnMeds={prnMeds} setPrnMeds={setPrnMeds} prnDoses={prnDoses} setPrnDoses={setPrnDoses} currentDate={currentDate} showToast={showToast} isClinicDay={isClinicDay} activeNudge={activeNudge} onNudgeComplete={completeNudge} />
             )}
           </div>
 
@@ -332,7 +360,7 @@ export default function App() {
       )}
 
       {page === 'trends' && <TrendsPage />}
-      {page === 'profile' && <ProfilePage key={profileKey} onExport={handleExport} onImport={handleImport} showToast={showToast} />}
+      {page === 'profile' && <ProfilePage key={profileKey} onExport={handleExport} onImport={handleImport} showToast={showToast} activeNudge={activeNudge} onNudgeComplete={completeNudge} />}
 
       {/* Spacer for bottom nav */}
       <div style={{ height: 72 }} />

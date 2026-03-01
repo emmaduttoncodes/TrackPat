@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon-32.png', 'favicon-16.png'],
       manifest: {
-        name: 'Transplant Track',
-        short_name: 'Transplant Track',
+        name: 'Transplant Log',
+        short_name: 'Transplant Log',
         description: 'A calm recovery tracking app',
         theme_color: '#8fae8b',
         background_color: '#f7f6f2',

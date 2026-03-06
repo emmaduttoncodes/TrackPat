@@ -278,7 +278,6 @@ export default function App() {
             }}>
               <Field label="Your name">
                 <input
-                  autoFocus
                   value={onboardingName}
                   onChange={(e) => setOnboardingName(e.target.value)}
                   placeholder="e.g. Pat"

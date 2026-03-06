@@ -12,12 +12,27 @@ async function requestPersistence() {
 }
 requestPersistence();
 
-// Auto-reload when a new service worker takes over (but not on first install)
+// Reload when a new service worker takes over, but only when the user
+// returns to the tab — never mid-session while they're typing.
 if ('serviceWorker' in navigator) {
+  let updatePending = false;
   let hadController = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (hadController) window.location.reload();
+    if (hadController) {
+      if (document.hidden) {
+        // Tab is in the background — reload immediately so it's fresh when they return
+        window.location.reload();
+      } else {
+        // Tab is active — wait until the user leaves and comes back
+        updatePending = true;
+      }
+    }
     hadController = true;
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (updatePending && document.visibilityState === 'visible') {
+      window.location.reload();
+    }
   });
 }
 

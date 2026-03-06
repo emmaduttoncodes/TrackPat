@@ -263,32 +263,14 @@ export default function App() {
       <Toast message={toastMsg} />
 
       {showOnboarding && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: ds.bg }}>
-          <div style={{ width: '100%', maxWidth: 380, padding: '0 24px' }}>
+        <div className="fixed inset-0 z-50 flex items-start justify-center" style={{ background: ds.bg, overflowY: 'auto' }}>
+          <div style={{ width: '100%', maxWidth: 380, padding: '40px 24px' }}>
             <div style={{ textAlign: 'center', marginBottom: 32 }}>
               <img src="/logo.png" alt="Transplant Log" className="mx-auto block" style={{ width: 80, height: 80, marginBottom: 12 }} />
               <h1 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 26, fontWeight: 700, color: ds.text, margin: '0 0 8px' }}>Welcome to <span style={{ whiteSpace: 'nowrap' }}>Transplant Log</span></h1>
               <p style={{ fontSize: 14, color: ds.textMuted, lineHeight: 1.5, margin: 0 }}>
                 A simple daily log to support your recovery journey after transplant.
               </p>
-            </div>
-            <div style={{
-              background: ds.cardAlt, borderRadius: ds.radiusSm, padding: '12px 14px',
-              marginBottom: 20, border: `1px solid ${ds.border}`,
-            }}>
-              <div style={{ fontSize: 13, color: ds.textMuted, lineHeight: 1.5, fontFamily: "'DM Sans', sans-serif" }}>
-                This app is a personal tracking aid — it does not replace medical advice. Always follow your transplant team's guidance and contact them if you have concerns.
-              </div>
-            </div>
-            <div style={{
-              background: '#f0edf8', borderRadius: ds.radiusSm, padding: '12px 14px',
-              marginBottom: 20, border: '1px solid rgba(123, 107, 158, 0.2)',
-              display: 'flex', alignItems: 'flex-start', gap: 10,
-            }}>
-              <Sparkles size={16} stroke="#7b6b9e" strokeWidth={1.8} style={{ flexShrink: 0, marginTop: 2 }} />
-              <div style={{ fontSize: 13, color: '#7b6b9e', lineHeight: 1.5, fontFamily: "'DM Sans', sans-serif" }}>
-                After setup, look for purple prompts to personalise your log — they'll guide you through the key features step by step.
-              </div>
             </div>
             <div style={{
               background: ds.card, borderRadius: ds.radiusLg, padding: '20px 18px',

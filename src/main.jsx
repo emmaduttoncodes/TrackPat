@@ -12,6 +12,15 @@ async function requestPersistence() {
 }
 requestPersistence();
 
+// Auto-reload when a new service worker takes over (but not on first install)
+if ('serviceWorker' in navigator) {
+  let hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hadController) window.location.reload();
+    hadController = true;
+  });
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />

@@ -1,7 +1,7 @@
 import { LayoutGrid, Activity, User } from 'lucide-react';
 import { ds } from './styles';
 
-export function BottomNav({ page, setPage }) {
+export function BottomNav({ page, setPage, activeNudge }) {
   const items = [
     {
       id: 'overview', label: 'Overview',
@@ -45,7 +45,16 @@ export function BottomNav({ page, setPage }) {
                   width: 20, height: 3, borderRadius: 2, background: ds.green,
                 }} />
               )}
-              <div style={{ marginTop: 2 }}>{item.icon}</div>
+              <div style={{ marginTop: 2, position: 'relative', display: 'inline-flex' }}>
+                {item.icon}
+                {item.id === 'profile' && activeNudge === 'nudge_clinic' && (
+                  <span style={{
+                    position: 'absolute', top: -2, right: -4,
+                    width: 8, height: 8, borderRadius: '50%', background: '#7b6b9e',
+                    animation: 'nudgePulse 2s ease-in-out infinite',
+                  }} />
+                )}
+              </div>
               {item.label}
             </button>
           );

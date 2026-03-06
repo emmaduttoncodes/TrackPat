@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { X } from 'lucide-react';
 import { ds, inputStyle, labelStyle } from './styles';
 
 // ─── Toast ────────────────────────────────────────────────────────────
@@ -138,4 +139,50 @@ export function ThumbPicker({ value, onChange }) {
     >{emoji}</button>
   );
   return <div className="flex gap-3">{btn('up', '👍')}{btn('down', '👎')}</div>;
+}
+
+// ─── Nudge Card ─────────────────────────────────────────────────────────
+export function NudgeCard({ icon: Icon, title, children, onDismiss, cta, onAction }) {
+  return (
+    <div style={{
+      background: '#f0edf8', borderRadius: ds.radiusLg, padding: '20px 18px',
+      border: '2px solid rgba(123, 107, 158, 0.3)', position: 'relative',
+      boxShadow: '0 0 0 4px rgba(123, 107, 158, 0.08)',
+    }}>
+      <button
+        onClick={onDismiss}
+        style={{
+          position: 'absolute', top: 12, right: 12, background: 'none', border: 'none',
+          cursor: 'pointer', padding: 4, lineHeight: 0,
+        }}
+        aria-label="Dismiss"
+      >
+        <X size={16} stroke="#7b6b9e" strokeWidth={2} />
+      </button>
+      <div className="flex items-start gap-3" style={{ paddingRight: 24 }}>
+        {Icon && (
+          <div style={{
+            width: 36, height: 36, borderRadius: '50%', background: 'rgba(123, 107, 158, 0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <Icon size={18} stroke="#7b6b9e" strokeWidth={2} />
+          </div>
+        )}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#7b6b9e', marginBottom: 3 }}>{title}</div>
+          <div style={{ fontSize: 13, color: '#7b6b9e', lineHeight: 1.5, opacity: 0.85 }}>{children}</div>
+          {cta && onAction && (
+            <button
+              onClick={onAction}
+              style={{
+                marginTop: 10, padding: '9px 18px', borderRadius: ds.radiusMd, border: 'none',
+                background: '#7b6b9e', color: '#fff', fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+              }}
+            >{cta}</button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }

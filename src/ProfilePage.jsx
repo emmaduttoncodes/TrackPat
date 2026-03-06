@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
-import { User, Settings } from 'lucide-react';
+import { User, Settings, Sparkles } from 'lucide-react';
 import { loadSetting, saveSetting, loadAllDays } from './db';
 import { todayStr, formatDate, formatTime, addDays, isWithinSixMonths } from './helpers';
 import { ds } from './styles';
 import { FoodSafetyView } from './profile/FoodSafetyView';
 import { ClinicAppointmentsView } from './profile/ClinicAppointments';
 import { SettingsView } from './profile/SettingsView';
+import { NudgeCard } from './ui';
 import { track } from './analytics';
 
-export function ProfilePage({ onExport, onImport, showToast }) {
+export function ProfilePage({ onExport, onImport, showToast, activeNudge, onNudgeComplete }) {
   const [transplantDate, setTransplantDate] = useState('');
   const [name, setName] = useState('Friend');
   const [editingName, setEditingName] = useState(false);
@@ -229,9 +230,18 @@ export function ProfilePage({ onExport, onImport, showToast }) {
           <span style={{ color: ds.textPlaceholder, fontSize: 18 }}>›</span>
         </div>
 
+        {/* Clinic nudge */}
+        {activeNudge === 'nudge_clinic' && (
+          <div style={{ marginBottom: 12 }}>
+            <NudgeCard icon={Sparkles} title="Step 3: Track your clinic visits" onDismiss={() => onNudgeComplete('nudge_clinic')}>
+              Keep a record of appointments, questions, and notes for your transplant team.
+            </NudgeCard>
+          </div>
+        )}
+
         {/* Clinic appointments */}
         <div
-          onClick={() => setShowClinicAppts(true)}
+          onClick={() => { setShowClinicAppts(true); if (activeNudge === 'nudge_clinic') onNudgeComplete('nudge_clinic'); }}
           style={{
             background: ds.card, borderRadius: ds.radiusLg, padding: '14px 16px',
             boxShadow: ds.cardShadow, border: ds.cardBorder, marginBottom: 16,

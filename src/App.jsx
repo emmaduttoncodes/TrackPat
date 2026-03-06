@@ -307,11 +307,11 @@ export default function App() {
 
       {onboardingTourStep != null && (
         <div className="fixed inset-0 z-50 flex flex-col" style={{ background: ds.bg }} onTouchStart={handleTourTouchStart} onTouchEnd={handleTourTouchEnd}>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 24px 0', maxWidth: 420, margin: '0 auto', width: '100%' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 24px 0', maxWidth: 420, margin: '0 auto', width: '100%', overflow: 'hidden' }}>
             <div style={{
               width: '100%', maxWidth: 240, aspectRatio: '9/16', borderRadius: ds.radiusLg,
-              overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.10)', marginBottom: 28,
-              border: '1px solid rgba(0,0,0,0.06)',
+              overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.10)', marginBottom: 20,
+              border: '1px solid rgba(0,0,0,0.06)', flexShrink: 1, minHeight: 0,
             }}>
               <img
                 src={onboardingTourSlides[onboardingTourStep].image}

@@ -52,12 +52,12 @@ export function SettingsView({ transplantDate, onDateChange, onExport, onImport,
           boxShadow: ds.cardShadow, border: ds.cardBorder,
         }}>
           <button onClick={onExport} className="w-full text-left" style={{ padding: '16px', fontSize: 15, color: ds.text, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
-            Backup data
+            Save a copy of my data
             <span style={{ float: 'right', color: ds.textPlaceholder }}>›</span>
           </button>
           <div style={{ borderTop: `1px solid ${ds.divider}` }}>
             <button onClick={() => fileInputRef.current?.click()} className="w-full text-left" style={{ padding: '16px', fontSize: 15, color: ds.text, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
-              Restore from backup
+              Restore from a saved copy
               <span style={{ float: 'right', color: ds.textPlaceholder }}>›</span>
             </button>
             <input
@@ -69,7 +69,7 @@ export function SettingsView({ transplantDate, onDateChange, onExport, onImport,
             />
           </div>
           <div style={{ padding: '0 16px 14px', fontSize: 12, color: ds.textMuted, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif" }}>
-            Your data is stored only on this device — it never leaves your phone and no one else can access it. However, it can be lost if you clear your browser data, delete the app, or switch devices. We recommend a monthly backup.
+            Your data is stored only on this device — it never leaves your phone and no one else can access it. However, if you clear your browser data, delete the app, or switch devices, your data will be permanently lost. We recommend saving a copy regularly, especially before updating your phone.
           </div>
         </div>
 

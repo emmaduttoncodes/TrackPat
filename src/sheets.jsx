@@ -34,7 +34,7 @@ export function PainSheet({ data, onChange }) {
             <span style={{ fontSize: 12, color: ds.textLight }}>{e.time}</span>
             <button onClick={() => remove(i)} style={{ fontSize: 12, color: '#c97070' }}>Remove</button>
           </div>
-          <Input label="Pain level (0–10)" value={e.level} onChange={(v) => update(i, 'level', v)} type="number" placeholder="5" min={0} max={10} />
+          <Input label="Pain level (0 = none, 10 = worst)" value={e.level} onChange={(v) => update(i, 'level', v)} type="number" placeholder="5" min={0} max={10} />
           <Input label="Location" value={e.location} onChange={(v) => update(i, 'location', v)} placeholder="e.g. abdomen" />
           <TextArea label="Note" value={e.note} onChange={(v) => update(i, 'note', v)} />
         </div>

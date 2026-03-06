@@ -180,7 +180,7 @@ export function FoodSafetyView({ transplantDate, onClose }) {
         paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
         background: `linear-gradient(transparent, ${ds.bg} 20%)`,
       }}>
-        <div style={{ maxWidth: ds.appMaxWidth, margin: '0 auto' }}>
+        <div style={{ maxWidth: ds.appMaxWidth, margin: '0 auto', textAlign: 'center' }}>
         <button
           onClick={() => { setWaiterMode(true); track('waiter_mode_opened'); }}
           style={{
@@ -189,6 +189,9 @@ export function FoodSafetyView({ transplantDate, onClose }) {
             cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
           }}
         >Show to waiter</button>
+        <div style={{ fontSize: 12, color: ds.textMuted, marginTop: 8, fontFamily: "'DM Sans', sans-serif" }}>
+          Opens a full-screen view you can hand to restaurant staff
+        </div>
         </div>
       </div>
     </div>

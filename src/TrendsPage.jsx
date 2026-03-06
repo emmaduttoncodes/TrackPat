@@ -73,7 +73,7 @@ export function TrendsPage() {
       setTimeout(() => w.print(), 400);
       track('report_generated');
     } else {
-      alert('Pop-up blocked. Please allow pop-ups for this site to export the report.');
+      alert('Your browser blocked the report from opening.\n\nTo fix this, look for a "pop-up blocked" notice in your browser\'s address bar and tap "Allow". Then try again.');
     }
   };
 
@@ -135,7 +135,8 @@ export function TrendsPage() {
         {!hasAny && (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
             <Activity size={48} stroke="#b5b5b5" strokeWidth={1.5} style={{ margin: '0 auto 12px' }} />
-            <p style={{ fontSize: 14, color: ds.textLight, maxWidth: 260, margin: '0 auto', lineHeight: 1.5 }}>Start logging data on the Overview tab and your trends will appear here.</p>
+            <p style={{ fontSize: 14, color: ds.textLight, maxWidth: 280, margin: '0 auto 8px', lineHeight: 1.5 }}>Your charts will appear here once you start logging on the Overview tab.</p>
+            <p style={{ fontSize: 13, color: ds.textPlaceholder, maxWidth: 280, margin: '0 auto', lineHeight: 1.5 }}>You can also export a summary report for your transplant team before clinic visits.</p>
           </div>
         )}
 

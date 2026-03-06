@@ -172,7 +172,9 @@ export default function App() {
   const updateDay = useCallback((section, value) => {
     setDayData((prev) => {
       const updated = { ...prev, [section]: value };
-      saveDay(currentDate, updated).catch(() => showToast('Failed to save — please try again'));
+      saveDay(currentDate, updated)
+        .then(() => showToast('Saved'))
+        .catch(() => showToast('Failed to save — please try again'));
       setIsDayEmpty(false);
       track('overview_' + section);
       return updated;
@@ -212,7 +214,7 @@ export default function App() {
         showToast('Invalid backup file');
         return;
       }
-      if (!window.confirm('Restore from this backup? This will replace all current data.')) return;
+      if (!window.confirm('Restore from this backup?\n\nThis will replace all your current data with the contents of this file. This cannot be undone.')) return;
       await importAllData(data);
       // Reload current state
       const [day, scheds, evts, prns, prnD] = await Promise.all([
@@ -447,8 +449,8 @@ export default function App() {
                   </div>
                 )}
                 {isDayEmpty && (
-                  <div className="text-center py-2 px-4 rounded-2xl" style={{ background: 'rgba(143,174,139,0.08)', color: ds.greenSage, fontSize: 13 }}>
-                    Tap any card to start recording
+                  <div className="text-center py-3 px-4 rounded-2xl" style={{ background: 'rgba(143,174,139,0.1)', color: ds.greenSage, fontSize: 13, lineHeight: 1.5 }}>
+                    Nothing logged yet today. Tap any card below to record how you're feeling.
                   </div>
                 )}
                 {activeNudge === 'nudge_track' && (

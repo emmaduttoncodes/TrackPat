@@ -5,10 +5,11 @@ import {
 } from './db';
 import { getDayName, DAY_NAMES, formatTime, nowTime, uid } from './helpers';
 import { ds, inputStyle, tileLabel } from './styles';
-import { BottomSheet, Field, Input, TextArea } from './ui';
+import { BottomSheet, Field, Input, TextArea, NudgeCard } from './ui';
 import { track } from './analytics';
+import { Sparkles } from 'lucide-react';
 
-export function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, setPrnMeds, prnDoses, setPrnDoses, currentDate, showToast, isClinicDay }) {
+export function MedicationTab({ schedules, setSchedules, events, setEvents, prnMeds, setPrnMeds, prnDoses, setPrnDoses, currentDate, showToast, isClinicDay, activeNudge, onNudgeComplete }) {
   const [editMode, setEditMode] = useState(false);
   const [editingMed, setEditingMed] = useState(null);
   const [addingMed, setAddingMed] = useState(false);
@@ -53,6 +54,7 @@ export function MedicationTab({ schedules, setSchedules, events, setEvents, prnM
       const updated = await loadMedEvents(currentDate);
       setEvents(updated);
       setTakenSheet(null);
+      showToast('Entry removed');
     } catch {
       showToast('Failed to update — please try again');
     }
@@ -182,10 +184,18 @@ export function MedicationTab({ schedules, setSchedules, events, setEvents, prnM
   return (
     <div>
       <div className="flex justify-end mb-3">
-        <button onClick={() => setEditMode(!editMode)} className="text-sm px-4 py-1.5 rounded-full font-medium" style={{ background: editMode ? '#d4a574' : '#e8e6e1', color: editMode ? '#fff' : ds.textMuted }}>
+        <button onClick={() => { setEditMode(!editMode); if (!editMode && activeNudge === 'nudge_meds') onNudgeComplete('nudge_meds'); }} className="text-sm px-4 py-1.5 rounded-full font-medium" style={{ background: editMode ? '#d4a574' : '#e8e6e1', color: editMode ? '#fff' : ds.textMuted }}>
           {editMode ? 'Done' : 'Edit'}
         </button>
       </div>
+
+      {activeNudge === 'nudge_meds' && (
+        <div style={{ marginBottom: 16 }}>
+          <NudgeCard icon={Sparkles} title="Step 2: Review your medications" onDismiss={() => onNudgeComplete('nudge_meds')}>
+            Tap Edit to check your medication list and make any changes.
+          </NudgeCard>
+        </div>
+      )}
 
       {isClinicDay && schedules.some(s => s.name.toLowerCase() === 'tacrolimus' && s.active) && (
         <div style={{ background: ds.amberGradient, borderRadius: ds.radiusLg, padding: '16px 20px', marginBottom: 16 }}>
@@ -444,7 +454,7 @@ export function MedicationTab({ schedules, setSchedules, events, setEvents, prnM
             <TextArea label="Note (optional)" value={takenSheet.note} onChange={(v) => setTakenSheet({ ...takenSheet, note: v })} placeholder="Any notes..." />
             <button onClick={saveTaken} className="w-full mt-2 py-3 rounded-2xl text-sm font-semibold" style={{ background: ds.green, color: '#fff' }}>Mark as taken</button>
             {getEvent(takenSheet.scheduleId) && (
-              <button onClick={removeTaken} className="w-full mt-2 py-3 rounded-2xl text-sm" style={{ background: '#fce8e8', color: '#c97070' }}>Mark as not taken</button>
+              <button onClick={removeTaken} className="w-full mt-2 py-3 rounded-2xl text-sm" style={{ background: '#fce8e8', color: '#c97070' }}>Remove this entry</button>
             )}
           </>
         )}

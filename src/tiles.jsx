@@ -8,9 +8,13 @@ export function VitalsTile({ data, onClick }) {
     { label: 'Heart', value: data.heartRate || '—', unit: data.heartRate ? 'bpm' : '', color: '#c97070' },
     { label: 'Weight', value: data.weightKg || '—', unit: data.weightKg ? 'kg' : '', color: '#7ab8a8' },
   ];
+  const allEmpty = stats.every((s) => s.value === '—');
   return (
     <div style={tile} onClick={onClick} className="active:scale-[0.98]">
-      <div style={{ ...tileLabel, color: ds.greenSage, marginBottom: 12 }}>Vitals</div>
+      <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+        <div style={{ ...tileLabel, color: ds.greenSage }}>Vitals</div>
+        {allEmpty && <div style={{ fontSize: 12, color: ds.textPlaceholder }}>Tap to log</div>}
+      </div>
       <div className="grid grid-cols-4 gap-2">
         {stats.map((s) => (
           <div key={s.label} className="text-center">
@@ -32,7 +36,10 @@ export function MoodTile({ data, onClick }) {
         {found ? (
           <div style={{ fontSize: 42, lineHeight: 1 }}>{found.emoji}</div>
         ) : (
-          <div style={{ fontSize: 32, opacity: 0.2, lineHeight: 1 }}>💭</div>
+          <div>
+            <div style={{ fontSize: 32, opacity: 0.2, lineHeight: 1 }}>💭</div>
+            <div style={{ fontSize: 12, color: ds.textPlaceholder, marginTop: 4 }}>Tap to log</div>
+          </div>
         )}
       </div>
       {data.note && <div style={{ fontSize: 11, color: ds.textLight, marginTop: 6, textAlign: 'center', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{data.note}</div>}
@@ -49,6 +56,7 @@ export function SleepTile({ data, onClick }) {
       <div className="flex items-end gap-2 mt-2">
         <div style={{ ...tileValue, fontSize: hrs ? 36 : 28, color: hrs ? ds.text : '#d4d0c8', lineHeight: 1 }}>{hrs ? hrs : '—'}</div>
         {hrs > 0 && <div style={{ fontSize: 14, color: '#8b9cc7', paddingBottom: 2 }}>hrs</div>}
+        {!hrs && <div style={{ fontSize: 12, color: ds.textPlaceholder, paddingBottom: 2 }}>Tap to log</div>}
       </div>
       <div className="mt-2 rounded-full overflow-hidden" style={{ height: 6, background: '#eeecea' }}>
         <div className="rounded-full" style={{ height: '100%', width: `${pct * 100}%`, background: 'linear-gradient(90deg, #8b9cc7, #a8b8d8)', transition: 'width .3s' }} />
@@ -75,7 +83,7 @@ export function PainTile({ data, onClick }) {
               {data.length > 1 && <div style={{ fontSize: 11, color: ds.textLight, marginTop: 2, whiteSpace: 'nowrap' }}>{data.length} entries today</div>}
             </>
           ) : (
-            <div style={{ fontSize: 13, color: ds.textPlaceholder, marginTop: 6 }}>None</div>
+            <div style={{ fontSize: 13, color: ds.textPlaceholder, marginTop: 6 }}>Tap to log</div>
           )}
         </div>
         {last && (
@@ -106,7 +114,7 @@ export function ActivityTile({ data, onClick }) {
       ) : (
         <div className="flex items-center gap-2 mt-3">
           <span style={{ fontSize: 20, opacity: 0.2 }}>🚶</span>
-          <span style={{ fontSize: 13, color: ds.textPlaceholder }}>No walks</span>
+          <span style={{ fontSize: 13, color: ds.textPlaceholder }}>Tap to log</span>
         </div>
       )}
     </div>
@@ -118,7 +126,10 @@ export function SmallTile({ label, icon, value, sub, color, onClick, empty }) {
     <div style={{ ...tile, minHeight: 72, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }} onClick={onClick} className="active:scale-[0.98]">
       <div style={{ ...tileLabel, color }}>{label}</div>
       {empty ? (
-        <div style={{ fontSize: 20, opacity: 0.2, marginTop: 4 }}>{icon}</div>
+        <div className="flex items-center gap-2 mt-1">
+          <span style={{ fontSize: 20, opacity: 0.2 }}>{icon}</span>
+          <span style={{ fontSize: 12, color: ds.textPlaceholder }}>Tap to log</span>
+        </div>
       ) : (
         <div className="flex items-center gap-2 mt-1" style={{ minWidth: 0 }}>
           {value && <span style={{ fontSize: 20, flexShrink: 0 }}>{value}</span>}

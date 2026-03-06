@@ -10,7 +10,7 @@ export function MiniChart({ title, color, data, unit, yMin, yMax, formatY }) {
     return (
       <div style={{ ...tile, marginBottom: 12 }}>
         <div style={{ ...tileLabel, color, marginBottom: 8 }}>{title}</div>
-        <div style={{ fontSize: 13, color: ds.textPlaceholder, textAlign: 'center', padding: '20px 0' }}>No data yet</div>
+        <div style={{ fontSize: 13, color: ds.textPlaceholder, textAlign: 'center', padding: '20px 0' }}>No {title.toLowerCase()} data logged yet</div>
       </div>
     );
   }

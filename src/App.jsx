@@ -15,7 +15,7 @@ import { TrendsPage } from './TrendsPage';
 import { ProfilePage } from './ProfilePage';
 import { inputStyle } from './styles';
 import { track } from './analytics';
-import { Heart } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 // ─── Main App ──────────────────────────────────────────────────────────
 export default function App() {
@@ -36,6 +36,7 @@ export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingName, setOnboardingName] = useState('');
   const [onboardingDate, setOnboardingDate] = useState('');
+  const [onboardingTourStep, setOnboardingTourStep] = useState(null);
   const [nudgesCompleted, setNudgesCompleted] = useState(null);
 
   const toastTimer = useRef(null);
@@ -97,9 +98,58 @@ export default function App() {
       await saveSetting('nudgesCompleted', []);
       setNudgesCompleted([]);
       setShowOnboarding(false);
+      setOnboardingTourStep(0);
       track('onboarding_completed');
     } catch {
       showToast('Failed to save — please try again');
+    }
+  };
+
+  const onboardingTourSlides = [
+    {
+      image: '/onboarding/dashboard.png',
+      title: 'Your daily snapshot',
+      body: 'Log how you\'re feeling each day — vitals, mood, sleep, pain, and more. It only takes a minute, and it all stays private on your device.',
+    },
+    {
+      image: '/onboarding/medication.png',
+      title: 'Stay on top of your meds',
+      body: 'Keep track of your medications with gentle reminders. Tick them off as you go — one less thing to worry about.',
+    },
+    {
+      image: '/onboarding/trends.png',
+      title: 'See how you\'re doing over time',
+      body: 'Watch your recovery progress with simple charts. You can also share a report with your transplant team before clinic visits.',
+    },
+    {
+      image: '/onboarding/appointment.png',
+      title: 'Prepare for clinic days',
+      body: 'Jot down questions before your appointment so nothing gets forgotten. Add notes during or after — it\'s all in one place.',
+    },
+  ];
+
+  const finishTour = () => {
+    setOnboardingTourStep(null);
+    track('onboarding_tour_completed');
+  };
+
+  const tourTouchStart = useRef(null);
+  const handleTourTouchStart = (e) => { tourTouchStart.current = e.touches[0].clientX; };
+  const handleTourTouchEnd = (e) => {
+    if (tourTouchStart.current == null || onboardingTourStep == null) return;
+    const diff = tourTouchStart.current - e.changedTouches[0].clientX;
+    tourTouchStart.current = null;
+    if (Math.abs(diff) < 50) return; // ignore small swipes
+    if (diff > 0) {
+      // swipe left → next
+      if (onboardingTourStep < onboardingTourSlides.length - 1) {
+        setOnboardingTourStep(s => s + 1);
+      } else {
+        finishTour();
+      }
+    } else {
+      // swipe right → previous
+      if (onboardingTourStep > 0) setOnboardingTourStep(s => s - 1);
     }
   };
 
@@ -214,7 +264,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: ds.bg }}>
           <div style={{ width: '100%', maxWidth: 380, padding: '0 24px' }}>
             <div style={{ textAlign: 'center', marginBottom: 32 }}>
-              <img src="/logo.png" alt="Transplant Log" style={{ width: 80, height: 80, marginBottom: 12, display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
+              <img src="/logo.png" alt="Transplant Log" className="mx-auto block" style={{ width: 80, height: 80, marginBottom: 12 }} />
               <h1 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 26, fontWeight: 700, color: ds.text, margin: '0 0 8px' }}>Welcome to <span style={{ whiteSpace: 'nowrap' }}>Transplant Log</span></h1>
               <p style={{ fontSize: 14, color: ds.textMuted, lineHeight: 1.5, margin: 0 }}>
                 A simple daily log to support your recovery journey after transplant.
@@ -226,6 +276,16 @@ export default function App() {
             }}>
               <div style={{ fontSize: 13, color: ds.textMuted, lineHeight: 1.5, fontFamily: "'DM Sans', sans-serif" }}>
                 This app is a personal tracking aid — it does not replace medical advice. Always follow your transplant team's guidance and contact them if you have concerns.
+              </div>
+            </div>
+            <div style={{
+              background: '#f0edf8', borderRadius: ds.radiusSm, padding: '12px 14px',
+              marginBottom: 20, border: '1px solid rgba(123, 107, 158, 0.2)',
+              display: 'flex', alignItems: 'flex-start', gap: 10,
+            }}>
+              <Sparkles size={16} stroke="#7b6b9e" strokeWidth={1.8} style={{ flexShrink: 0, marginTop: 2 }} />
+              <div style={{ fontSize: 13, color: '#7b6b9e', lineHeight: 1.5, fontFamily: "'DM Sans', sans-serif" }}>
+                After setup, look for purple prompts to personalise your log — they'll guide you through the key features step by step.
               </div>
             </div>
             <div style={{
@@ -262,6 +322,72 @@ export default function App() {
         </div>
       )}
 
+      {onboardingTourStep != null && (
+        <div className="fixed inset-0 z-50 flex flex-col" style={{ background: ds.bg }} onTouchStart={handleTourTouchStart} onTouchEnd={handleTourTouchEnd}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 24px 0', maxWidth: 420, margin: '0 auto', width: '100%' }}>
+            <div style={{
+              width: '100%', maxWidth: 240, aspectRatio: '9/16', borderRadius: ds.radiusLg,
+              overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.10)', marginBottom: 28,
+              border: '1px solid rgba(0,0,0,0.06)',
+            }}>
+              <img
+                src={onboardingTourSlides[onboardingTourStep].image}
+                alt={onboardingTourSlides[onboardingTourStep].title}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
+              />
+            </div>
+            <h2 style={{
+              fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 22, fontWeight: 700,
+              color: ds.text, margin: '0 0 8px', textAlign: 'center',
+            }}>
+              {onboardingTourSlides[onboardingTourStep].title}
+            </h2>
+            <p style={{
+              fontSize: 14, color: ds.textMuted, lineHeight: 1.6, margin: 0, textAlign: 'center',
+              maxWidth: 320,
+            }}>
+              {onboardingTourSlides[onboardingTourStep].body}
+            </p>
+          </div>
+          <div style={{ padding: '20px 24px 36px', maxWidth: 420, margin: '0 auto', width: '100%' }}>
+            {/* Dots */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
+              {onboardingTourSlides.map((_, i) => (
+                <div key={i} style={{
+                  width: 8, height: 8, borderRadius: '50%',
+                  background: i === onboardingTourStep ? ds.green : ds.border,
+                  transition: 'background 0.2s',
+                }} />
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                onClick={finishTour}
+                style={{
+                  flex: 1, padding: '14px', borderRadius: ds.radiusMd, border: `1px solid ${ds.border}`,
+                  background: ds.card, color: ds.textMuted, fontSize: 15, fontWeight: 500,
+                  cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                }}
+              >Skip</button>
+              <button
+                onClick={() => {
+                  if (onboardingTourStep < onboardingTourSlides.length - 1) {
+                    setOnboardingTourStep(onboardingTourStep + 1);
+                  } else {
+                    finishTour();
+                  }
+                }}
+                style={{
+                  flex: 2, padding: '14px', borderRadius: ds.radiusMd, border: 'none',
+                  background: ds.green, color: '#fff', fontSize: 15, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                }}
+              >{onboardingTourStep < onboardingTourSlides.length - 1 ? 'Next' : 'Let\'s go'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {page === 'overview' && (
         <div>
           {/* Header */}
@@ -292,8 +418,16 @@ export default function App() {
                   key={t}
                   onClick={() => { setTab(t); track('tab_' + t); }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                  style={{ background: tab === t ? ds.card : 'transparent', color: tab === t ? ds.text : ds.textLight, boxShadow: tab === t ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}
-                >{t === 'overview' ? 'Overview' : 'Medication'}</button>
+                  style={{ background: tab === t ? ds.card : 'transparent', color: tab === t ? ds.text : ds.textLight, boxShadow: tab === t ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                >
+                  {t === 'medication' && activeNudge === 'nudge_meds' && (
+                    <span style={{
+                      width: 8, height: 8, borderRadius: '50%', background: '#7b6b9e',
+                      animation: 'nudgePulse 2s ease-in-out infinite', flexShrink: 0,
+                    }} />
+                  )}
+                  {t === 'overview' ? 'Overview' : 'Medication'}
+                </button>
               ))}
             </div>
           </div>
@@ -318,7 +452,7 @@ export default function App() {
                   </div>
                 )}
                 {activeNudge === 'nudge_track' && (
-                  <NudgeCard icon={Heart} title="Start by logging how you feel" onDismiss={() => completeNudge('nudge_track')}>
+                  <NudgeCard icon={Sparkles} title="Step 1: Start by logging how you feel" onDismiss={() => completeNudge('nudge_track')}>
                     Tap any card below to record your first entry. It only takes a moment.
                   </NudgeCard>
                 )}
@@ -365,7 +499,7 @@ export default function App() {
       {/* Spacer for bottom nav */}
       <div style={{ height: 72 }} />
 
-      <BottomNav page={page} setPage={(p) => { if (p === 'overview') setCurrentDate(todayStr()); setPage(p); track('tab_' + p); }} />
+      <BottomNav page={page} setPage={(p) => { if (p === 'overview') setCurrentDate(todayStr()); setPage(p); track('tab_' + p); }} activeNudge={activeNudge} />
     </div>
     </div>
   );

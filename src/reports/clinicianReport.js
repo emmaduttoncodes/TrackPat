@@ -1,9 +1,14 @@
 import { todayStr, formatDate } from '../helpers';
 import { symptomLabels, moodEmojis } from '../constants';
 
+function esc(str) {
+  if (str == null) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 export function buildReportSvgChart(data, color, title, yMin, yMax, formatY) {
   if (!data.length) {
-    return `<div class="chart-wrap"><div class="chart-title" style="color:${color}">${title}</div><div style="text-align:center;padding:20px 0;color:#999;font-size:13px">No data</div></div>`;
+    return `<div class="chart-wrap"><div class="chart-title" style="color:${esc(color)}">${esc(title)}</div><div style="text-align:center;padding:20px 0;color:#999;font-size:13px">No data</div></div>`;
   }
   const lo = yMin != null ? yMin : Math.min(...data.map(d => d.y));
   const hi = yMax != null ? yMax : Math.max(...data.map(d => d.y));
@@ -28,7 +33,7 @@ export function buildReportSvgChart(data, color, title, yMin, yMax, formatY) {
   yLabels.forEach(v => {
     const y = padT + chartH - ((v - lo) / range) * chartH;
     svg += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#e0ddd6" stroke-width="1"/>`;
-    svg += `<text x="${padL - 4}" y="${y + 3}" text-anchor="end" fill="#999" font-size="9" font-family="sans-serif">${formatY ? formatY(v) : Math.round(v)}</text>`;
+    svg += `<text x="${padL - 4}" y="${y + 3}" text-anchor="end" fill="#999" font-size="9" font-family="sans-serif">${esc(formatY ? formatY(v) : Math.round(v))}</text>`;
   });
   svg += `<path d="${areaPath}" fill="${color}" opacity="0.1"/>`;
   svg += `<path d="${linePath}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
@@ -47,7 +52,7 @@ export function buildReportSvgChart(data, color, title, yMin, yMax, formatY) {
   const latest = data[data.length - 1];
   const latestVal = formatY ? formatY(latest.y) : latest.y;
 
-  return `<div class="chart-wrap"><div class="chart-title" style="color:${color}">${title}</div>${svg}<div style="font-size:11px;color:#999;text-align:right;margin-top:4px">Latest: <strong style="color:#3d3d3d">${latestVal}</strong></div></div>`;
+  return `<div class="chart-wrap"><div class="chart-title" style="color:${esc(color)}">${esc(title)}</div>${svg}<div style="font-size:11px;color:#999;text-align:right;margin-top:4px">Latest: <strong style="color:#3d3d3d">${esc(latestVal)}</strong></div></div>`;
 }
 
 export function buildClinicianReport({ patientName, transplantDate, startDate, endDate, days, painData, activityData, weightData, moodData }) {
@@ -112,8 +117,8 @@ export function buildClinicianReport({ patientName, transplantDate, startDate, e
     const sympStr = symptoms.length > 0 ? symptoms.join(', ') : '—';
     const sympStyle = symptoms.length > 0 ? 'color:#c9914a;font-weight:500' : '';
     tableRows += `<tr>
-      <td>${fmtDate(date)}</td><td>${painStr}</td><td>${actStr}</td><td>${wt}</td><td>${mood}</td>
-      <td style="${sympStyle}">${sympStr}</td>
+      <td>${fmtDate(date)}</td><td>${esc(painStr)}</td><td>${esc(actStr)}</td><td>${esc(wt)}</td><td>${esc(mood)}</td>
+      <td style="${sympStyle}">${esc(sympStr)}</td>
     </tr>`;
   });
 
@@ -126,7 +131,7 @@ export function buildClinicianReport({ patientName, transplantDate, startDate, e
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Recovery report – ${patientName}</title>
+<title>Recovery report – ${esc(patientName)}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#3d3d3d;background:#fff;font-size:13px;line-height:1.5}
@@ -163,7 +168,7 @@ tbody tr:last-child td{border-bottom:none}
 <div class="accent-bar"></div>
 <div class="container">
   <h1>Recovery progress report</h1>
-  <div class="subtitle">${patientName}</div>
+  <div class="subtitle">${esc(patientName)}</div>
   <div class="meta">
     ${transplantDate ? `<span>Transplant: ${fmtDate(transplantDate)}</span>` : ''}
     ${daysSinceTx != null && daysSinceTx >= 0 ? `<span>Day ${daysSinceTx} post-transplant</span>` : ''}

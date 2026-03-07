@@ -80,6 +80,24 @@ export default function App() {
     return () => { cancelled = true; };
   }, [currentDate]);
 
+  // Track PWA install availability and completion
+  const installPromptRef = useRef(null);
+  useEffect(() => {
+    const onBeforeInstall = (e) => {
+      installPromptRef.current = e;
+      track('pwa_install_available');
+    };
+    const onInstalled = () => {
+      track('pwa_installed');
+    };
+    window.addEventListener('beforeinstallprompt', onBeforeInstall);
+    window.addEventListener('appinstalled', onInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstall);
+      window.removeEventListener('appinstalled', onInstalled);
+    };
+  }, []);
+
   // Check for first-time user → show onboarding; load nudge state
   useEffect(() => {
     loadSetting('userName').then((name) => {

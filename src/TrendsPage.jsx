@@ -41,7 +41,7 @@ export function TrendsPage() {
     const sorted = Object.entries(filteredDays).sort(([a], [b]) => a.localeCompare(b));
 
     const painData = sorted.flatMap(([date, d]) =>
-      (d.pain || []).filter(e => Number(e.level) > 0).map(e => ({ label: date, y: Number(e.level) }))
+      (d.pain || []).filter(e => e.level != null && e.level !== '').map(e => ({ label: date, y: Number(e.level) }))
     );
     const activityData = sorted
       .filter(([, d]) => d.activity && d.activity.walkMinutes && d.activity.walkMinutes.length > 0)
@@ -93,7 +93,7 @@ export function TrendsPage() {
   const painData = sorted
     .flatMap(([date, d]) =>
       (d.pain || [])
-        .filter((e) => Number(e.level) > 0)
+        .filter((e) => e.level != null && e.level !== '')
         .map((e) => ({ label: date, y: Number(e.level) }))
     );
 

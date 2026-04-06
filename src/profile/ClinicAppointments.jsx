@@ -28,7 +28,7 @@ function ClinicAppointmentDetail({ appointment, onSave, onDelete, onClose, allAp
     const sorted = Object.entries(filteredDays).sort(([a], [b]) => a.localeCompare(b));
 
     const painData = sorted.flatMap(([d, v]) =>
-      (v.pain || []).filter(e => Number(e.level) > 0).map(e => ({ label: d, y: Number(e.level) }))
+      (v.pain || []).filter(e => e.level != null && e.level !== '').map(e => ({ label: d, y: Number(e.level) }))
     );
     const activityData = sorted
       .filter(([, v]) => v.activity && v.activity.walkMinutes && v.activity.walkMinutes.length > 0)
